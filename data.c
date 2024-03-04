@@ -3,54 +3,28 @@
 
 #include "data.h"
 
-void file_to_vec(FILE* f, int** v, point_t start, point_t end){
-		int x = 0, y = 0;
-		int c;
-
-		while(x != start.x || y != start.y){
-				c = fgetc(f);
-				x++;
-				
-				if(c == '\n'){
-					x = 0;
-					y++;
-				}
-		}
-		
-		int lab_y = 0;
-		while(y < end.y){
-			while((c = fgetc(f)) != '\n'){
-				if(x >= start.x && x < end.x){
-					if(c == 'X')
-						v[y-start.y][x-start.x] = 0;
-					else
-						v[y-start.y][x-start.x] = 1;
-				}
-				x++;
-			}
-			y++;
-			x=0;
-		}
-
-		// remove start end
-}
-
-int** zero_vec(point_t size){
-	int** new = malloc(sizeof(int*) * size.y);
-
-	for(int i = 0; i < size.y; i++)
-		new[i] = malloc(sizeof(int) * size.x);
-	
-
-	for(int i = 0; i < size.y; i++){
-		for(int j = 0; j < size.x; j++)
-			new[i][j] = 0;
-	}
+char** zero_vec(point_t size){
+	char** new = calloc(size.y, sizeof(char*));
+	for (int i = 0; i < size.y; i++)
+		new[i] = calloc(size.x, sizeof(char));
 
 	return new;
 }
 
-point_t* get_lab_info(FILE* f){
+void free_vec(char** vec, point_t size){
+	for(int i = 0; i < size.y; i++){
+		free(vec[i]);
+	}
+	free(vec);
+}
+
+point_t* get_lab_info(char* filename){
+	FILE* f = fopen(filename, "r");
+	if(f == NULL){
+		fprintf(stderr, "cannot open file %s\n", filename);
+		exit(1);
+	}
+
 	point_t* coords = malloc(sizeof(point_t)*3);
 
 	int c;
@@ -77,6 +51,7 @@ point_t* get_lab_info(FILE* f){
 	}
 	coords[0].y = y+1;
 	
+	fclose(f);
 	return coords;
 }
 
@@ -133,6 +108,19 @@ box_t* get_division_points(point_t size){
 	boxes[6] = new_box(0, y2-3, x1, y3);
 	boxes[7] = new_box(x1-1, y2-3, x2, y3);
 	boxes[8] = new_box(x2-3, y2-3, x3, y3);
-
+	
 	return boxes;
+}
+
+point_t biggest_box(box_t* boxes){
+	point_t size = {0, 0};
+
+	for(int i = 0; i < 9; i++){
+		if(boxes[i].B.x-boxes[i].A.x > size.x)
+			size.x = boxes[i].B.x-boxes[i].A.x;
+		if(boxes[i].B.y-boxes[i].A.y > size.y)
+			size.y = boxes[i].B.y-boxes[i].A.y;
+	}
+
+	return size;
 }

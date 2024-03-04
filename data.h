@@ -11,14 +11,16 @@ typedef struct{
 	point_t B;
 } box_t;
 
-int** zero_vec(point_t);
+char** zero_vec(point_t);
 
-void file_to_vec(FILE*, int**, point_t, point_t);
-
-point_t* get_lab_info(FILE*);
+point_t* get_lab_info(char*);
 
 box_t new_box(int, int, int, int);
 
-box_t* get_division_points(point_t size);
+box_t* get_division_points(point_t);
+
+void free_vec(char**, point_t);
+
+point_t biggest_box(box_t*);
 
 #endif

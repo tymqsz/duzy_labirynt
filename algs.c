@@ -2,93 +2,155 @@
 #include <stdio.h>
 
 #include "data.h"
+#include "file_io.h"
 
-void load_proper_block(point_t crt, box_t* boxes, FILE* f, int** lab, int* box){
+int REC_DEPTH = 0;
+
+void load_proper_block(point_t* crt, box_t* boxes, char* filename, char** lab, int* box){
+	if(crt->x > boxes[*box].A.x && crt->x < boxes[*box].B.x && crt->y > boxes[*box].A.y && crt->y < boxes[*box].B.y)
+		return;
+
 	for(int i = 0; i < 9; i++){
-		if((crt.x > boxes[i].A.x && crt.y > boxes[i].A.y && crt.y < boxes[i].B.y && crt.x < boxes[i].B.x)){
-			file_to_vec(f, lab, boxes[i].A, boxes[i].B);
+		if((crt->x > boxes[i].A.x && crt->y > boxes[i].A.y && crt->y < boxes[i].B.y && crt->x < boxes[i].B.x)){
+			file_to_vec(filename, lab, &boxes[i]);
 			*box = i;
 			return;
 		}
 	}
 	
-
-	fprintf(stderr, "Couldnt load proper block\n");
+	fprintf(stderr, "Couldnt load a proper block\n");
 	exit(1);
 }
 
-void traverse(int** lab, int** vis, point_t size, point_t end, box_t* boxes, FILE* f, int* box, point_t prev, point_t crt){
-	if(crt.x == end.x && crt.y == end.y){
+void traverse2(char** lab, char* INPUT, box_t* boxes, int box, point_t start, point_t end, point_t size){
+	char QUEUE[] = "queue.txt";
+	init_queue(QUEUE);
+	int TOP_LINE = 0;
+	int SIZE = 1;
+	append(QUEUE, start);
+
+	char VISITED[] = "visited.txt";
+	init_visited_file(VISITED, size);
+	
+	point_t crt = start;
+	change_file_position(VISITED, &size, &crt, 1);
+	while(SIZE != 0){
+		crt = top(QUEUE, TOP_LINE);
+		SIZE--;
+		if(crt.x == end.x && crt.y == end.y){
+			printf("found a way out (%d, %d)\n", end.x, end.y);
+			exit(EXIT_SUCCESS);
+		}
+		TOP_LINE++;
+		
+		load_proper_block(&crt, boxes, INPUT, lab, &box);
+
+
+		if (lab[crt.y - boxes[box].A.y][crt.x - 1 - boxes[box].A.x]) {
+			if (crt.x >= 2) {
+				point_t* nxt = malloc(sizeof(point_t));
+				nxt->x = crt.x - 2;
+				nxt->y = crt.y;
+				if (read_file_position(VISITED, &size, nxt) == 0){
+					SIZE++;
+					change_file_position(VISITED, &size, nxt, 1);
+					append(QUEUE, *nxt);
+				}
+				free(nxt);
+			}
+		}
+		if (lab[crt.y - boxes[box].A.y][crt.x + 1 - boxes[box].A.x]) {
+			if (crt.x < size.x) {
+				point_t* nxt = malloc(sizeof(point_t));
+				nxt->x = crt.x + 2;
+				nxt->y = crt.y;
+				if (read_file_position(VISITED, &size, nxt) == 0){
+					SIZE++;
+					append(QUEUE, *nxt);
+					change_file_position(VISITED, &size, nxt, 1);
+				}
+				free(nxt);
+			}
+		}
+		if (lab[crt.y - 1 - boxes[box].A.y][crt.x - boxes[box].A.x]) {
+			if (crt.y >= 2) {
+				point_t* nxt = malloc(sizeof(point_t));
+				nxt->x = crt.x;
+				nxt->y = crt.y - 2;
+				if (read_file_position(VISITED, &size, nxt) == 0){
+					SIZE++;
+					append(QUEUE, *nxt);
+					change_file_position(VISITED, &size, nxt, 1);
+				}
+				free(nxt);
+			}
+		}
+		if (lab[crt.y + 1 - boxes[box].A.y][crt.x - boxes[box].A.x]) {
+			if (crt.y < size.y) {
+				point_t* nxt = malloc(sizeof(point_t));
+				nxt->x = crt.x;
+				nxt->y = crt.y + 2;
+				if (read_file_position(VISITED, &size, nxt) == 0){
+					SIZE++;
+					append(QUEUE, *nxt);
+					change_file_position(VISITED, &size, nxt, 1);
+				}
+				free(nxt);
+			}
+		}
+	}	
+}
+
+
+void traverse(char** lab, char* visited, char* filename, int* box, box_t* boxes, point_t* size, point_t* end, point_t* crt){
+	if (crt->x == end->x && crt->y == end->y) {
 		printf("found a way out\n");
-		exit(0);
+		exit(EXIT_SUCCESS);
 	}
-			
-	// fix this shit
-	printf("crt node: (%d, %d), (%d, %d)\n", crt.x, crt.y, crt.x-boxes[*box].A.x, crt.y-boxes[*box].A.y);
 	
-	// take direction vec ??
-	point_t dir;
-	dir.x = crt.x-prev.x;
-	dir.y = crt.y-prev.y;
-	
-	if(crt.x >= size.x || crt.y >= size.y || crt.x < 1 || crt.y < 1)
-		return;
+	printf("%d\n", ++REC_DEPTH);
+	change_file_position(visited, size, crt, 1);
 
-	if(!(crt.x > boxes[*box].A.x && crt.x < boxes[*box].B.x && crt.y > boxes[*box].A.y && crt.y < boxes[*box].B.y)){
-		load_proper_block(crt, boxes, f, lab, box);
-
-		fclose(f);
-		f = fopen("maze.txt", "r");
-	}
-	vis[crt.y][crt.x] = 1;
-	
-
-	if(crt.x >= size.x || crt.y >= size.y || crt.x < 1 || crt.y < 1)
-		return;
-
-	if(lab[crt.y-boxes[*box].A.y][crt.x-1-boxes[*box].A.x] && !vis[crt.y][crt.x-2]){
-		point_t nxt1;
-		nxt1.x = crt.x-2;
-		nxt1.y = crt.y;
-		
-		traverse(lab, vis, size, end, boxes, f, box, crt, nxt1);
+	// make a loop (moving vectors)
+	load_proper_block(crt, boxes, filename, lab, box);
+	if (lab[crt->y - boxes[*box].A.y][crt->x - 1 - boxes[*box].A.x]) {
+		if (crt->x >= 2) {
+			crt->x -= 2;
+			if (read_file_position(visited, size, crt) == 0) {
+				traverse(lab, visited, filename, box, boxes, size, end, crt);
+			}
+			crt->x += 2;
+		}
 	}
 
-	if(!(crt.x > boxes[*box].A.x && crt.x < boxes[*box].B.x && crt.y > boxes[*box].A.y && crt.y < boxes[*box].B.y)){
-		load_proper_block(crt, boxes, f, lab, box);	
-		fclose(f);
-		f = fopen("maze.txt", "r");
+	load_proper_block(crt, boxes, filename, lab, box);
+	if (lab[crt->y - boxes[*box].A.y][crt->x + 1 - boxes[*box].A.x]) {
+		if (crt->x + 2 < size->x) {
+			crt->x += 2;
+			if (read_file_position(visited, size, crt) == 0)
+				traverse(lab, visited, filename, box, boxes, size, end, crt);
+			crt->x -= 2;
+		}
 	}
-	if(lab[crt.y-boxes[*box].A.y][crt.x+1-boxes[*box].A.x] && !vis[crt.y][crt.x+2]){
-		point_t nxt2;
-		nxt2.x = crt.x+2;
-		nxt2.y = crt.y;
-		
-		traverse(lab, vis, size, end, boxes, f, box, crt, nxt2);
+
+	load_proper_block(crt, boxes, filename, lab, box);
+	if (lab[crt->y - 1 - boxes[*box].A.y][crt->x - boxes[*box].A.x]) {
+		if (crt->y >= 2) {
+			crt->y -= 2;
+
+			if (read_file_position(visited, size, crt) == 0)
+				traverse(lab, visited, filename, box, boxes, size, end, crt);
+			crt->y += 2;
+		}
 	}
-	if(!(crt.x > boxes[*box].A.x && crt.x < boxes[*box].B.x && crt.y > boxes[*box].A.y && crt.y < boxes[*box].B.y)){
-		load_proper_block(crt, boxes, f, lab, box);	
-		
-		fclose(f);
-		f = fopen("maze.txt", "r");
-	}
-	if(lab[crt.y-1-boxes[*box].A.y][crt.x-boxes[*box].A.x] && !vis[crt.y-2][crt.x]){
-		point_t nxt3;
-		nxt3.x = crt.x;
-		nxt3.y = crt.y-2;
-		
-		traverse(lab, vis, size, end, boxes, f, box, crt, nxt3);
-	}
-	if(!(crt.x > boxes[*box].A.x && crt.x < boxes[*box].B.x && crt.y > boxes[*box].A.y && crt.y < boxes[*box].B.y)){
-		load_proper_block(crt, boxes, f, lab, box);	
-		fclose(f);
-		f = fopen("maze.txt", "r");
-	}
-	if(lab[crt.y+1-boxes[*box].A.y][crt.x-boxes[*box].A.x] && !vis[crt.y+2][crt.x]){
-		point_t nxt4;
-		nxt4.x = crt.x;
-		nxt4.y = crt.y+2;
-		
-		traverse(lab, vis, size, end, boxes, f, box, crt, nxt4);
+
+	load_proper_block(crt, boxes, filename, lab, box);
+	if (lab[crt->y + 1 - boxes[*box].A.y][crt->x - boxes[*box].A.x]) {
+		if (crt->y + 2 < size->y) {
+			crt->y += 2;
+			if (read_file_position(visited, size, crt) == 0)
+				traverse(lab, visited, filename, box, boxes, size, end, crt);
+        crt->y -= 2;
+		}
 	}
 }
