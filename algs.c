@@ -108,7 +108,6 @@ void traverse(char** lab, char* visited, char* filename, int* box, box_t* boxes,
 		exit(EXIT_SUCCESS);
 	}
 	
-	printf("%d\n", ++REC_DEPTH);
 	change_file_position(visited, size, crt, 1);
 
 	// make a loop (moving vectors)

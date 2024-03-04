@@ -23,15 +23,15 @@ int main(){
 	point_t start = {1, 1};
 	point_t end = {size.x-2, size.y-2};
 	
-	//init_visited_file(VISITED, size);
+	init_visited_file(VISITED, size);
 
 
 	// find block to load first based on start
 	file_to_vec(INPUT, lab, &boxes[0]);
 
 	int box = 0;
-	traverse2(lab, INPUT, boxes, box, start, end, size);
-	//traverse(lab, VISITED, INPUT, &box, boxes, &size, &end, &start);
+	//traverse2(lab, INPUT, boxes, box, start, end, size);
+	traverse(lab, VISITED, INPUT, &box, boxes, &size, &end, &start);
 	
 	free_vec(lab, buffor_size);
 }
