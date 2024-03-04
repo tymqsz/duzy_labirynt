@@ -1,0 +1,2 @@
+% Duży
+labirynt
