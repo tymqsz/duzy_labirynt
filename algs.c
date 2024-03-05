@@ -22,7 +22,7 @@ void load_proper_block(point_t* crt, box_t* boxes, char* filename, char** lab, i
 	exit(1);
 }
 
-void extract_nodes(char** lab, point_t size, point_t start, point_t end, box_t* boxes, char* filename, int box){
+int** extract_nodes(char** lab, point_t size, point_t start, point_t end, box_t* boxes, char* filename, int box){
 	int* prev_x = malloc(sizeof(int) * size.x);
 	int* prev_y = malloc(sizeof(int) * size.y);
 	
@@ -75,18 +75,10 @@ void extract_nodes(char** lab, point_t size, point_t start, point_t end, box_t* 
 			}
 		}
 	}
-
-	for(int i = 0; i < node; i++){
-		printf("%d: ", i);
-		for(int j = 0; j < 4; j++){
-			printf("%d ", neigh[i][j]);
-		}
-		printf("\n");
-	}
-
-	for(int i = 0; i < N; i++)
-		free(neigh[i]);
-	free(neigh);
+	
+	neigh[N-1][0] = node;
+	
+	return neigh;	
 }
 
 

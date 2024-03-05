@@ -1,12 +1,79 @@
 #include<stdio.h>
 #include<stdlib.h>
-
+#define MAX_NODES 1000000
 #include "data.h"
 #include "algs.h"
 #include "file_io.h"
 
 char INPUT[] = "maze.txt";
 char VISITED[] = "visited.txt";
+
+
+int DEPTH = 0;
+
+// Queue implementation
+struct Queue {
+    int front, rear, size;
+    unsigned capacity;
+    int* array;
+};
+
+struct Queue* createQueue(unsigned capacity) {
+    struct Queue* queue = (struct Queue*)malloc(sizeof(struct Queue));
+    queue->capacity = capacity;
+    queue->front = queue->size = 0;
+    queue->rear = capacity - 1;
+    queue->array = (int*)malloc(queue->capacity * sizeof(int));
+    return queue;
+}
+
+int isQueueEmpty(struct Queue* queue) {
+    return (queue->size == 0);
+}
+
+void enqueue(struct Queue* queue, int item) {
+    if (queue->size == queue->capacity) {
+        printf("Queue overflow\n");
+        exit(EXIT_FAILURE);
+    }
+    queue->rear = (queue->rear + 1) % queue->capacity;
+    queue->array[queue->rear] = item;
+    queue->size = queue->size + 1;
+}
+
+int dequeue(struct Queue* queue) {
+    if (isQueueEmpty(queue)) {
+        printf("Queue underflow\n");
+        exit(EXIT_FAILURE);
+    }
+    int item = queue->array[queue->front];
+    queue->front = (queue->front + 1) % queue->capacity;
+    queue->size = queue->size - 1;
+    return item;
+}
+
+void MILION_MB_BFS(int** g, int start, int end, int* vis) {
+    struct Queue* queue = createQueue(MAX_NODES);
+    enqueue(queue, start);
+    vis[start] = 1;  // Mark the starting node as visited
+
+    while (!isQueueEmpty(queue)) {
+        int crt = dequeue(queue);
+        if (crt == end) {
+            printf("reached the end\n");
+            exit(EXIT_SUCCESS);
+        }
+
+        for (int j = 0; j < 4; j++) {
+            if (g[crt][j] != 9999999 && !vis[crt + g[crt][j]]) {
+                vis[crt + g[crt][j]] = 1;  // Mark the visited node
+                enqueue(queue, crt + g[crt][j]);
+            }
+        }
+        DEPTH++; // Increment the depth after processing each node
+    }
+}
+
 
 int main(){
 	// divide into two functions
@@ -25,7 +92,20 @@ int main(){
 	
 	int box = 0;
 
-	extract_nodes(lab, size, start, end, boxes, INPUT, box);
+	int** graph = extract_nodes(lab, size, start, end, boxes, INPUT, box);
+	
+	printf("no. of nodes: %d\n", graph[size.x*size.y-1][0]);
+	
+	int* vis = calloc(size.x*size.y, sizeof(int));
+/*	for(int i = 0; i < graph[size.x*size.y-1][0]; i++){
+		for(int j = 0; j < 4; j++){
+			printf("%d ", graph[i][j]);
+		}
+		printf("\n");
+	}*/
+
+	MILION_MB_BFS(graph, 0, graph[size.x*size.y-1][0]-1, vis);
+
 	/*
 	init_visited_file(VISITED, size);
 
