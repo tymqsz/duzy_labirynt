@@ -23,6 +23,10 @@ int main(){
 	point_t start = {1, 1};
 	point_t end = {size.x-2, size.y-2};
 	
+	int box = 0;
+
+	extract_nodes(lab, size, start, end, boxes, INPUT, box);
+	/*
 	init_visited_file(VISITED, size);
 
 
@@ -32,6 +36,6 @@ int main(){
 	int box = 0;
 	//traverse2(lab, INPUT, boxes, box, start, end, size);
 	traverse(lab, VISITED, INPUT, &box, boxes, &size, &end, &start);
-	
+	*/
 	free_vec(lab, buffor_size);
 }
