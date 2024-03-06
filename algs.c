@@ -22,28 +22,25 @@ void load_proper_block(point_t* crt, box_t* boxes, char* filename, char** lab, i
 	exit(1);
 }
 
-int** extract_nodes(char** lab, point_t size, point_t start, point_t end, box_t* boxes, char* filename, int box){
-	int* prev_x = malloc(sizeof(int) * size.x);
-	int* prev_y = malloc(sizeof(int) * size.y);
+void extract_nodes(char** lab, point_t size, point_t start, point_t end, box_t* boxes, char* filename, int box){
+	int* prev_x = malloc(sizeof(int) * (size.x*2+1));
+	int* prev_y = malloc(sizeof(int) * (size.y*2+1));
 	
 	for(int i = 0; i < size.x; i++)
 		prev_x[i] = -1;
 	for(int i = 0; i < size.y; i++)
 		prev_y[i] = -1;
-
-	int N = size.x*size.y;
-	int** neigh = calloc(N, sizeof(int*));
-	for(int i = 0; i < N; i++){
-		neigh[i] = calloc(4, sizeof(int));
-		for(int j = 0; j < 4; j++)
-			neigh[i][j] = 9999999;
-	}
-
+	
+	char NEIGH_FILE[] = "neigh.bin";
+	int N = size.x*size.y*4;
+	int EMPTY = size.x*size.y;
+	init_array_binary(NEIGH_FILE, N, EMPTY);
+	
 	point_t crt;
 	int act_x, act_y;
 	int node = 0;
-	for(int y = 1; y < size.y; y += 2){
-		for(int x = 1; x < size.x; x += 2){
+	for(int y = 1; y < size.y*2+1; y += 2){
+		for(int x = 1; x < size.x*2+1; x += 2){
 			crt.x = x;
 			crt.y = y;
 			load_proper_block(&crt, boxes, filename, lab, &box);
@@ -51,24 +48,33 @@ int** extract_nodes(char** lab, point_t size, point_t start, point_t end, box_t*
 			act_y = crt.y-boxes[box].A.y;
 			act_x = crt.x-boxes[box].A.x;
 
-			if((lab[act_y][act_x-1] || lab[act_y][act_x+1]) && (lab[act_y-1][act_x] || lab[act_y+1][act_x]) ||
+			if(!((lab[act_y][act_x-1] && lab[act_y][act_x+1] && !lab[act_y-1][act_x] && !lab[act_y+1][act_x]) ||
+				(!lab[act_y][act_x-1] && !lab[act_y][act_x+1] && lab[act_y-1][act_x] && lab[act_y+1][act_x])) ||
 				(start.x == x && start.y == y) || (end.x == x && end.y == y)){
+
 				if(node != 0){
 					if(lab[act_y][act_x-1] && prev_y[y] != -1){
-						neigh[node][0] = prev_y[y] - node;
-						if(neigh[prev_y[y]][1] == 9999999){
-							neigh[prev_y[y]][1] = node - prev_y[y];
+						update_array_binary(NEIGH_FILE, node*4, prev_y[y]-node);
+							
+						int* neigh_left = read_array_binary(NEIGH_FILE, prev_y[y]*4+1, 1); 
+						if(*neigh_left == EMPTY){
+							update_array_binary(NEIGH_FILE, prev_y[y]*4+1, node-prev_y[y]);
 						}
+						free(neigh_left);
 					}
 					if(lab[act_y-1][act_x] && prev_x[x] != -1){
-						neigh[node][2] = prev_x[x] - node;
-						if(neigh[prev_x[x]][3] == 9999999){
-
-							neigh[prev_x[x]][3] = node - prev_x[x];
+						update_array_binary(NEIGH_FILE, node*4+2, prev_x[x]-node);
+						int* neigh_down = read_array_binary(NEIGH_FILE, prev_x[x]*4+3, 1); 
+						if(*neigh_down == EMPTY){
+							update_array_binary(NEIGH_FILE, prev_x[x]*4+3, node-prev_x[x]);
 						}
+						free(neigh_down);
 					}
 				}
 
+				int* array = read_array_binary("neigh.bin", 0, 9*4);
+				
+				free(array);
 				prev_x[x] = node;
 				prev_y[y] = node;
 				node++;
@@ -76,34 +82,8 @@ int** extract_nodes(char** lab, point_t size, point_t start, point_t end, box_t*
 		}
 	}
 	
-	neigh[N-1][0] = node;
-	
-	return neigh;	
+	update_array_binary(NEIGH_FILE, size.x*size.y*4-1, node);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 void traverse2(char** lab, char* INPUT, box_t* boxes, int box, point_t start, point_t end, point_t size){

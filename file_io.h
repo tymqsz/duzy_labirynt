@@ -16,4 +16,11 @@ void append(char*, point_t);
 
 point_t top(char*, int);
 
+void init_array_binary(char*, int, int);
+
+void write_array_binary(char*, int*, int);
+
+int* read_array_binary(char*, int, int);
+
+void update_array_binary(char*, int, int);
 #endif

@@ -82,6 +82,56 @@ char read_file_position(char* filename, point_t* lab_size, point_t* position){
 	return value;
 }
 
+void init_array_binary(char* filename, int size, int val){
+	FILE* f = fopen(filename, "wb");
+	
+	for(int i =  0; i < size; i++)
+		fwrite(&val, sizeof(int), 1, f);
+	
+	fclose(f);
+}
+
+void write_array_binary(char* filename, int* arr, int size){
+	FILE* f = fopen(filename, "wb");
+
+	if(fwrite(arr, sizeof(int), size, f) == size)
+		printf("write succesful\n");
+	else{
+		perror("write unsuccesful\n");
+		exit(EXIT_FAILURE);
+	}
+	fclose(f);
+}
+
+int* read_array_binary(char* filename, int offset, int size) {
+    FILE* f = fopen(filename, "rb");
+	
+	fseek(f, offset*sizeof(int), SEEK_SET);
+    int* arr = malloc(sizeof(int) * (size));
+	
+	if(fread(arr, sizeof(int), size, f) != size){
+		perror("read unsuccessful\n");
+		fclose(f);
+		free(arr);
+		exit(EXIT_FAILURE);
+	}
+
+    fclose(f);
+    return arr;
+}
+
+void update_array_binary(char* filename, int offset, int value){
+	FILE* f = fopen(filename, "r+b");
+	fseek(f, offset*sizeof(int), SEEK_SET);
+	
+	if(fwrite(&value, sizeof(int), 1, f) != 1){
+		printf("update unsuccessful\n");
+		fclose(f);
+		exit(EXIT_FAILURE);
+	}
+	fclose(f);
+}
+
 void init_visited_file(char* filename, point_t lab_size){
 	FILE* f = fopen(filename, "w");
 	char zero = 48;

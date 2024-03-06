@@ -1,6 +1,6 @@
 #include<stdio.h>
 #include<stdlib.h>
-#define MAX_NODES 1000000
+#define MAX_NODES 1000
 #include "data.h"
 #include "algs.h"
 #include "file_io.h"
@@ -63,7 +63,6 @@ void MILION_MB_BFS(int** g, int start, int end, int* vis) {
             printf("reached the end\n");
             exit(EXIT_SUCCESS);
         }
-
         for (int j = 0; j < 4; j++) {
             if (g[crt][j] != 9999999 && !vis[crt + g[crt][j]]) {
                 vis[crt + g[crt][j]] = 1;  // Mark the visited node
@@ -92,19 +91,27 @@ int main(){
 	
 	int box = 0;
 
-	int** graph = extract_nodes(lab, size, start, end, boxes, INPUT, box);
+	file_to_vec(INPUT, lab, &boxes[0]);
 	
-	printf("no. of nodes: %d\n", graph[size.x*size.y-1][0]);
+	point_t true_size = {(size.x-1)/2, (size.y-1)/2};
+	extract_nodes(lab, true_size, start, end, boxes, INPUT, box);
 	
-	int* vis = calloc(size.x*size.y, sizeof(int));
-/*	for(int i = 0; i < graph[size.x*size.y-1][0]; i++){
+	int* nodes = read_array_binary("neigh.bin", true_size.x*true_size.y*4-1, 1);
+	printf("no. of nodes: %d\n", *nodes);
+	
+	int* array = read_array_binary("neigh.bin", 0, *nodes*4);
+	
+	exit(0);
+	//int* vis = calloc(size.x*size.y, sizeof(int));
+/*	
+for(int i = 0; i < graph[size.x*size.y-1][0]; i++){
 		for(int j = 0; j < 4; j++){
 			printf("%d ", graph[i][j]);
 		}
 		printf("\n");
 	}*/
 
-	MILION_MB_BFS(graph, 0, graph[size.x*size.y-1][0]-1, vis);
+	//MILION_MB_BFS(graph, 0, graph[size.x*size.y-1][0]-1, vis);
 
 	/*
 	init_visited_file(VISITED, size);

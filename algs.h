@@ -11,6 +11,6 @@ void traverse(char**, char*, char*, int*, box_t*, point_t*, point_t*, point_t*);
 
 void traverse2(char** lab, char* INPUT, box_t* boxes, int box, point_t start, point_t end, point_t size);
 
-int** extract_nodes(char** lab, point_t size, point_t start, point_t end, box_t* boxes, char* filename, int box);
+void extract_nodes(char** lab, point_t size, point_t start, point_t end, box_t* boxes, char* filename, int box);
 
 #endif
