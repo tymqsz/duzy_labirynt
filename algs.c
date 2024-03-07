@@ -144,20 +144,35 @@ void bfs(int start, int end, int n_nodes, point_t size){
 	reconstruct_path(0, n_nodes-1);		
 }
 
+int get_dir(int Ax, int Ay, int Bx, int By){
+	if(Bx-Ax < 0)
+		return 0;
+	if(By-Ay < 0)
+		return 1;
+	if(Bx-Ax > 0)
+		return 2;
+	return 3;
+}
+
 void reconstruct_path(int start, int end){
 	char PARENT[] = "parent.bin";
 	char TRANSLATE[] = "trans.bin";
 	
-	FILE* path = fopen("path.txt", "w");
 	int crt = end;
 	int read;
 	int x, y;
-
+	int* path = malloc(2*end*sizeof(int));
+	for(int k = 0; k < 2*end; k++)
+		path[k] = -1;
+	
+	int i = 0;
 	while(crt != start){
 		x = read_digit_binary(TRANSLATE, crt*2);
 		y = read_digit_binary(TRANSLATE, crt*2+1);
 
-		fprintf(path, "(%d, %d)\n", x, y);
+		path[i*2] = x;
+		path[i*2+1] = y;
+		i++;
 
 		read = read_digit_binary(PARENT, crt);
 
@@ -165,6 +180,21 @@ void reconstruct_path(int start, int end){
 	}
 	x = read_digit_binary(TRANSLATE, start*2);
 	y = read_digit_binary(TRANSLATE, start*2+1);
-	fprintf(path, "(%d, %d)\n", x, y);
-	fclose(path);
+	
+	path[i*2] = x;
+	path[i*2+1] = y;
+	
+	FILE* out = fopen("path.txt", "w");
+	int l = end-1;
+	while(path[l*2] == -1)
+		l--;
+	while(l >= 0){
+		x = path[l*2];
+		y = path[l*2+1];
+		fprintf(out, "(%d, %d)\n", x, y);
+		l--;
+	}
+	free(path);
+
+
 }
