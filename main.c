@@ -1,9 +1,11 @@
 #include<stdio.h>
 #include<stdlib.h>
-#define MAX_NODES 1000
+
 #include "data.h"
 #include "algs.h"
 #include "file_io.h"
+
+//one file for defines
 
 char INPUT[] = "maze.txt";
 char VISITED[] = "visited.txt";
@@ -29,8 +31,10 @@ int main(){
 	point_t true_size = {(size.x-1)/2, (size.y-1)/2};
 	extract_nodes(lab, true_size, start, end, boxes, INPUT, box);
 	
+	free_vec(lab, buffor_size);
+	
 	int* nodes = read_array_binary("neigh.bin", true_size.x*true_size.y*4-1, 1);
 	printf("no. of nodes: %d\n", *nodes);
 	
-	free_vec(lab, buffor_size);
+	bfs(0, *nodes-1, *nodes, true_size);
 }

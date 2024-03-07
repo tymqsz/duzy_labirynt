@@ -23,4 +23,8 @@ void free_vec(char**, point_t);
 
 point_t biggest_box(box_t*);
 
+int max(int, int);
+
+int min(int, int);
+
 #endif

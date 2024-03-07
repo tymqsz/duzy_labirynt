@@ -62,7 +62,7 @@ void write_array_binary(char* filename, int* arr, int size){
 	if(fwrite(arr, sizeof(int), size, f) == size)
 		printf("write succesful\n");
 	else{
-		perror("write unsuccesful\n");
+		perror("write unsuccesful");
 		exit(EXIT_FAILURE);
 	}
 	fclose(f);
@@ -71,11 +71,11 @@ void write_array_binary(char* filename, int* arr, int size){
 int* read_array_binary(char* filename, int offset, int size) {
     FILE* f = fopen(filename, "rb");
 	
+	//printf("reading %d ints\n", size);
 	fseek(f, offset*sizeof(int), SEEK_SET);
     int* arr = malloc(sizeof(int) * (size));
-	
 	if(fread(arr, sizeof(int), size, f) != size){
-		perror("read unsuccessful\n");
+		perror("read unsuccessful");
 		fclose(f);
 		free(arr);
 		exit(EXIT_FAILURE);
@@ -83,6 +83,21 @@ int* read_array_binary(char* filename, int offset, int size) {
 
     fclose(f);
     return arr;
+}
+
+int read_digit_binary(char* filename, int offset){
+	FILE* f = fopen(filename, "rb");
+	
+	fseek(f, offset*sizeof(int), SEEK_SET);
+    int digit;
+	if(fread(&digit, sizeof(int), 1, f) != 1){
+		perror("read unsuccessful");
+		fclose(f);
+		exit(EXIT_FAILURE);
+	}
+
+    fclose(f);
+    return digit;
 }
 
 void update_array_binary(char* filename, int offset, int value){

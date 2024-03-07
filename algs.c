@@ -3,6 +3,9 @@
 
 #include "data.h"
 #include "file_io.h"
+#include "queue.h"
+
+void reconstruct_path(int start, int end);
 
 void load_proper_block(point_t* crt, box_t* boxes, char* filename, char** lab, int* box){
 	if(crt->x > boxes[*box].A.x && crt->x < boxes[*box].B.x && crt->y > boxes[*box].A.y && crt->y < boxes[*box].B.y)
@@ -34,9 +37,14 @@ void extract_nodes(char** lab, point_t size, point_t start, point_t end, box_t* 
 	int EMPTY = size.x*size.y;
 	init_array_binary(NEIGH_FILE, N, EMPTY);
 	
+	char TRANSLATE[] = "trans.bin";
+	init_array_binary(TRANSLATE, N/2, -1);
+	update_array_binary(TRANSLATE, 0, 1);
+	update_array_binary(TRANSLATE, 0, 1);
 	point_t crt;
 	int act_x, act_y;
 	int node = 0;
+	int neigh_left, neigh_down;
 	for(int y = 1; y < size.y*2+1; y += 2){
 		for(int x = 1; x < size.x*2+1; x += 2){
 			crt.x = x;
@@ -54,22 +62,22 @@ void extract_nodes(char** lab, point_t size, point_t start, point_t end, box_t* 
 					if(lab[act_y][act_x-1] && prev_y[y] != -1){
 						update_array_binary(NEIGH_FILE, node*4, prev_y[y]-node);
 							
-						int* neigh_left = read_array_binary(NEIGH_FILE, prev_y[y]*4+1, 1); 
-						if(*neigh_left == EMPTY){
+						neigh_left = read_digit_binary(NEIGH_FILE, prev_y[y]*4+1); 
+						if(neigh_left == EMPTY){
 							update_array_binary(NEIGH_FILE, prev_y[y]*4+1, node-prev_y[y]);
 						}
-						free(neigh_left);
 					}
 					if(lab[act_y-1][act_x] && prev_x[x] != -1){
 						update_array_binary(NEIGH_FILE, node*4+2, prev_x[x]-node);
-						int* neigh_down = read_array_binary(NEIGH_FILE, prev_x[x]*4+3, 1); 
-						if(*neigh_down == EMPTY){
+						neigh_down = read_digit_binary(NEIGH_FILE, prev_x[x]*4+3); 
+						if(neigh_down == EMPTY){
 							update_array_binary(NEIGH_FILE, prev_x[x]*4+3, node-prev_x[x]);
 						}
-						free(neigh_down);
 					}
 				}
-
+				
+				update_array_binary(TRANSLATE, node*2, x);
+				update_array_binary(TRANSLATE, node*2+1, y);
 				prev_x[x] = node;
 				prev_y[y] = node;
 				node++;
@@ -80,4 +88,83 @@ void extract_nodes(char** lab, point_t size, point_t start, point_t end, box_t* 
 	free(prev_x);
 	free(prev_y);
 	update_array_binary(NEIGH_FILE, size.x*size.y*4-1, node);
+}
+
+void bfs(int start, int end, int n_nodes, point_t size){
+	Queue_t* queue = init_queue(1000);
+	
+	int HELD_NODES = 1000;
+	if(HELD_NODES > n_nodes)
+		HELD_NODES = n_nodes;
+
+	int* nodes = read_array_binary("neigh.bin", 0, 4*HELD_NODES);
+	int min_node = 0, max_node = HELD_NODES;
+	
+	char PARENT[] = "parent.bin";
+	init_array_binary(PARENT, n_nodes, -1);
+	
+	int crt = start;
+	int vis;
+
+	push(queue, crt);
+	update_array_binary(PARENT, crt, crt);
+	while(queue->internal_size != 0 || queue->external_size != 0){
+		crt = pop(queue);
+		if(crt == end){
+			printf("found a way out\n");
+		}
+		if(crt >= max_node){
+			max_node = min(crt+HELD_NODES/2, n_nodes);
+			min_node = max(max_node-HELD_NODES, 0);
+			
+			free(nodes);
+			nodes = read_array_binary("neigh.bin", 4*min_node, 4*(max_node-min_node));
+		}
+		if(crt < min_node){
+			min_node = max(crt-HELD_NODES/2, 0);
+			max_node = min(min_node+HELD_NODES, n_nodes);
+
+			free(nodes);
+			nodes = read_array_binary("neigh.bin", 4*min_node, 4*(max_node-min_node));
+		}
+
+		for(int i = 0; i < 4; i++){
+			int next;
+			next = crt + nodes[(crt-min_node)*4+i];
+			if(next-crt != size.x*size.y){
+				vis = read_digit_binary(PARENT, next);
+				if(vis == -1){
+					update_array_binary(PARENT, next, crt);
+					push(queue, next);
+				}
+			}
+		}
+	}
+		
+	reconstruct_path(0, n_nodes-1);		
+}
+
+void reconstruct_path(int start, int end){
+	char PARENT[] = "parent.bin";
+	char TRANSLATE[] = "trans.bin";
+	
+	FILE* path = fopen("path.txt", "w");
+	int crt = end;
+	int read;
+	int x, y;
+
+	while(crt != start){
+		x = read_digit_binary(TRANSLATE, crt*2);
+		y = read_digit_binary(TRANSLATE, crt*2+1);
+
+		fprintf(path, "(%d, %d)\n", x, y);
+
+		read = read_digit_binary(PARENT, crt);
+
+		crt = read;
+	}
+	x = read_digit_binary(TRANSLATE, start*2);
+	y = read_digit_binary(TRANSLATE, start*2+1);
+	fprintf(path, "(%d, %d)\n", x, y);
+	fclose(path);
 }

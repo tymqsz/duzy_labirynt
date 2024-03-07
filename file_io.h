@@ -12,4 +12,5 @@ int* read_array_binary(char*, int, int);
 
 void update_array_binary(char*, int, int);
 
+int read_digit_binary(char*, int);
 #endif
