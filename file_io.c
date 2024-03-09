@@ -3,17 +3,16 @@
 
 #include "data.h"
 
-void file_to_vec(char* filename, char** v, box_t* box){
+void lab_to_vec(char* filename, char** vec, block_t block){
 		FILE* f = fopen(filename, "r");
 		if(f == NULL){
 			fprintf(stderr, "cannot open file %s\n", filename);
-			exit(1);
+			exit(EXIT_FAILURE);
 		}
 
 		int x = 0, y = 0;
 		int c;
-
-		while(x != box->A.x || y != box->A.y){
+		while(x != block.mini.x || y != block.mini.y){
 				c = fgetc(f);
 				x++;
 				
@@ -23,84 +22,64 @@ void file_to_vec(char* filename, char** v, box_t* box){
 				}
 		}
 		
-		int lab_y = 0;
-		while(y < box->B.y){
+		while(y < block.maxi.y){
 			while((c = fgetc(f)) != '\n'){
-				if(x >= box->A.x && x < box->B.x && y < box->B.y && y >= box->A.y){
-					if(c == 'X')
-						v[y-box->A.y][x-box->A.x] = 0;
+				if(x >= block.mini.x && x < block.maxi.x && y < block.maxi.y && y >= block.mini.y){
+					if(c == 'X' || c == 'P' || c == 'K')
+						vec[y - block.mini.y][x - block.mini.x] = 0;
 					else
-						v[y-box->A.y][x-box->A.x] = 1;
-					
-					
-					if(c == 'P')
-						v[y-box->A.y][x-box->A.x+1] = 0;
-					if(c == 'K')
-						v[y-box->A.y][x-box->A.x-1] = 0;
+						vec[y - block.mini.y][x - block.mini.x] = 1;
 				}
 				x++;
 			}
 			y++;
 			x=0;
 		}
-		
+
 		fclose(f);
 }
 	
-void init_array_binary(char* filename, int size, int val){
+void init_file_vector(char* filename, int size, int value){
 	FILE* f = fopen(filename, "wb");
 	
 	for(int i =  0; i < size; i++)
-		fwrite(&val, sizeof(int), 1, f);
+		fwrite(&value, sizeof(int), 1, f);
 	
 	fclose(f);
 }
 
-void write_array_binary(char* filename, int* arr, int size){
-	FILE* f = fopen(filename, "wb");
-
-	if(fwrite(arr, sizeof(int), size, f) == size)
-		printf("write succesful\n");
-	else{
-		perror("write unsuccesful");
-		exit(EXIT_FAILURE);
-	}
-	fclose(f);
-}
-
-int* read_array_binary(char* filename, int offset, int size) {
+int* read_file_vector(char* filename, int offset, int size) {
     FILE* f = fopen(filename, "rb");
-	
-	//printf("reading %d ints\n", size);
 	fseek(f, offset*sizeof(int), SEEK_SET);
-    int* arr = malloc(sizeof(int) * (size));
-	if(fread(arr, sizeof(int), size, f) != size){
+    
+	int* vec = malloc(sizeof(int) * (size));
+	if(fread(vec, sizeof(int), size, f) != size){
 		perror("read unsuccessful");
 		fclose(f);
-		free(arr);
+		free(vec);
 		exit(EXIT_FAILURE);
 	}
 
     fclose(f);
-    return arr;
+    return vec;
 }
 
-int read_digit_binary(char* filename, int offset){
+int read_file_position(char* filename, int offset){
 	FILE* f = fopen(filename, "rb");
-	
 	fseek(f, offset*sizeof(int), SEEK_SET);
-    int digit;
-	if(fread(&digit, sizeof(int), 1, f) != 1){
+	
+	int value;
+	if(fread(&value, sizeof(int), 1, f) != 1){
 		perror("read unsuccessful");
 		fclose(f);
 		exit(EXIT_FAILURE);
 	}
 
     fclose(f);
-    return digit;
+    return value;
 }
 
-void update_array_binary(char* filename, int offset, int value){
+void update_file_vector(char* filename, int offset, int value){
 	FILE* f = fopen(filename, "r+b");
 	fseek(f, offset*sizeof(int), SEEK_SET);
 	
@@ -110,4 +89,13 @@ void update_array_binary(char* filename, int offset, int value){
 		exit(EXIT_FAILURE);
 	}
 	fclose(f);
+}
+
+void delete_temp_files(char** temp_files, int n_files){
+	for(int i = 0; i < n_files; i++){
+		if(remove(temp_files[i]) != 0){
+			fprintf(stderr, "couldnt remove %s\n", temp_files[i]);
+			exit(EXIT_FAILURE);
+		}
+	}
 }

@@ -2,15 +2,15 @@
 #define IH
 #include "data.h"
 
-void file_to_vec(char*, char**, box_t*);
+void lab_to_vec(char*, char**, block_t);
 
-void init_array_binary(char*, int, int);
+void init_file_vector(char*, int, int);
 
-void write_array_binary(char*, int*, int);
+int* read_file_vector(char*, int, int);
 
-int* read_array_binary(char*, int, int);
+void update_file_vector(char*, int, int);
 
-void update_array_binary(char*, int, int);
+int read_file_position(char*, int);
 
-int read_digit_binary(char*, int);
+void delete_temp_files(char**, int);
 #endif

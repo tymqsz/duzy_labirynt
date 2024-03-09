@@ -7,21 +7,21 @@ typedef struct{
 } point_t;
 
 typedef struct{
-	point_t A;
-	point_t B;
-} box_t;
+	point_t mini;
+	point_t maxi;
+} block_t;
 
 char** zero_vec(point_t);
 
-point_t* get_lab_info(char*);
+point_t get_lab_size(char*);
 
-box_t new_box(int, int, int, int);
+block_t new_block(int, int, int, int);
 
-box_t* get_division_points(point_t);
+block_t* divide_into_9_blocks(point_t);
 
 void free_vec(char**, point_t);
 
-point_t biggest_box(box_t*);
+point_t biggest_block(block_t*);
 
 int max(int, int);
 

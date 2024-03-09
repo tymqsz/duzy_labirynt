@@ -1,113 +1,112 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "metadata.h"
 #include "data.h"
 #include "file_io.h"
 #include "queue.h"
 
 void reconstruct_path(int start, int end);
 
-void load_proper_block(point_t* crt, box_t* boxes, char* filename, char** lab, int* box){
-	if(crt->x > boxes[*box].A.x && crt->x < boxes[*box].B.x && crt->y > boxes[*box].A.y && crt->y < boxes[*box].B.y)
+void load_proper_block(point_t* crt, block_t* blocks, char* filename, char** lab, int *block_index){
+	if(crt->x > blocks[*block_index].mini.x && crt->x < blocks[*block_index].maxi.x &&
+	   crt->y > blocks[*block_index].mini.y && crt->y < blocks[*block_index].maxi.y)
 		return;
 
 	for(int i = 0; i < 9; i++){
-		if((crt->x > boxes[i].A.x && crt->y > boxes[i].A.y && crt->y < boxes[i].B.y && crt->x < boxes[i].B.x)){
-			file_to_vec(filename, lab, &boxes[i]);
-			*box = i;
+		if(crt->x > blocks[i].mini.x && crt->x < blocks[i].maxi.x &&
+		   crt->y > blocks[i].mini.y && crt->y < blocks[i].maxi.y){
+			lab_to_vec(filename, lab, blocks[i]);
+			*block_index = i;
 			return;
 		}
 	}
 	
 	fprintf(stderr, "Couldnt load a proper block\n");
-	exit(1);
+	exit(EXIT_FAILURE);
 }
 
-void extract_nodes(char** lab, point_t size, point_t start, point_t end, box_t* boxes, char* filename, int box){
+void extract_nodes(char** lab, point_t size, point_t start, point_t end, block_t* blocks, char* filename, int block_index){
 	int* prev_x = malloc(sizeof(int) * (size.x*2+1));
 	int* prev_y = malloc(sizeof(int) * (size.y*2+1));
-	
 	for(int i = 0; i < size.x; i++)
 		prev_x[i] = -1;
 	for(int i = 0; i < size.y; i++)
 		prev_y[i] = -1;
 	
-	char NEIGH_FILE[] = "neigh.bin";
-	int N = size.x*size.y*4;
-	int EMPTY = size.x*size.y;
-	init_array_binary(NEIGH_FILE, N, EMPTY);
+
+	int EMPTY = size.x*size.y+1;
+	init_file_vector(GRAPH_BIN, size.x*size.y*4, EMPTY);
 	
-	char TRANSLATE[] = "trans.bin";
-	init_array_binary(TRANSLATE, N/2, -1);
-	update_array_binary(TRANSLATE, 0, 1);
-	update_array_binary(TRANSLATE, 0, 1);
-	point_t crt;
-	int act_x, act_y;
-	int node = 0;
+	init_file_vector(NODE_COORDS_BIN, size.x*size.y*2, -1);
+	update_file_vector(NODE_COORDS_BIN, 0, 1);
+
+	point_t crt = {1, 1};
+	point_t crt_index = {1, 1};
+	int node_nr = 0;
 	int neigh_left, neigh_down;
-	for(int y = 1; y < size.y*2+1; y += 2){
-		for(int x = 1; x < size.x*2+1; x += 2){
-			crt.x = x;
-			crt.y = y;
-			load_proper_block(&crt, boxes, filename, lab, &box);
+	while(crt.y < size.y*2+1){
+		while(crt.x < size.x*2+1){
+			load_proper_block(&crt, blocks, filename, lab, &block_index);
 			
-			act_y = crt.y-boxes[box].A.y;
-			act_x = crt.x-boxes[box].A.x;
+			crt_index.x = crt.x - blocks[block_index].mini.x;
+			crt_index.y = crt.y - blocks[block_index].mini.y;
 
-			if(!((lab[act_y][act_x-1] && lab[act_y][act_x+1] && !lab[act_y-1][act_x] && !lab[act_y+1][act_x]) ||
-				(!lab[act_y][act_x-1] && !lab[act_y][act_x+1] && lab[act_y-1][act_x] && lab[act_y+1][act_x])) ||
-				(start.x == x && start.y == y) || (end.x == x && end.y == y)){
-
-				if(node != 0){
-					if(lab[act_y][act_x-1] && prev_y[y] != -1){
-						update_array_binary(NEIGH_FILE, node*4, prev_y[y]-node);
-							
-						neigh_left = read_digit_binary(NEIGH_FILE, prev_y[y]*4+1); 
+			if(!((lab[crt_index.y][crt_index.x-1] && lab[crt_index.y][crt_index.x+1] && !lab[crt_index.y-1][crt_index.x] && !lab[crt_index.y+1][crt_index.x]) ||
+				(!lab[crt_index.y][crt_index.x-1] && !lab[crt_index.y][crt_index.x+1] && lab[crt_index.y-1][crt_index.x] && lab[crt_index.y+1][crt_index.x])) ||
+				(start.x == crt.x && start.y == crt.y) || (end.x == crt.x && end.y == crt.y)){
+				if(node_nr != 0){
+					if(lab[crt_index.y][crt_index.x-1] && prev_y[crt.y] != -1){
+						update_file_vector(GRAPH_BIN, node_nr*4, prev_y[crt.y]-node_nr);
+						neigh_left = read_file_position(GRAPH_BIN, prev_y[crt.y]*4+1); 
+						
 						if(neigh_left == EMPTY){
-							update_array_binary(NEIGH_FILE, prev_y[y]*4+1, node-prev_y[y]);
+							update_file_vector(GRAPH_BIN, prev_y[crt.y]*4+1, node_nr-prev_y[crt.y]);
 						}
 					}
-					if(lab[act_y-1][act_x] && prev_x[x] != -1){
-						update_array_binary(NEIGH_FILE, node*4+2, prev_x[x]-node);
-						neigh_down = read_digit_binary(NEIGH_FILE, prev_x[x]*4+3); 
+					if(lab[crt_index.y-1][crt_index.x] && prev_x[crt.x] != -1){
+						update_file_vector(GRAPH_BIN, node_nr*4+2, prev_x[crt.x]-node_nr);
+						neigh_down = read_file_position(GRAPH_BIN, prev_x[crt.x]*4+3); 
+						
 						if(neigh_down == EMPTY){
-							update_array_binary(NEIGH_FILE, prev_x[x]*4+3, node-prev_x[x]);
+							update_file_vector(GRAPH_BIN, prev_x[crt.x]*4+3, node_nr-prev_x[crt.x]);
 						}
 					}
 				}
 				
-				update_array_binary(TRANSLATE, node*2, x);
-				update_array_binary(TRANSLATE, node*2+1, y);
-				prev_x[x] = node;
-				prev_y[y] = node;
-				node++;
+				update_file_vector(NODE_COORDS_BIN, node_nr*2, crt.x);
+				update_file_vector(NODE_COORDS_BIN, node_nr*2+1, crt.y);
+				prev_x[crt.x] = node_nr;
+				prev_y[crt.y] = node_nr;
+				node_nr++;
 			}
+			crt.x += 2;
 		}
+		crt.x = 1;
+		crt.y += 2;
 	}
 	
 	free(prev_x);
 	free(prev_y);
-	update_array_binary(NEIGH_FILE, size.x*size.y*4-1, node);
+	update_file_vector(GRAPH_BIN, size.x*size.y*4-1, node_nr);
 }
 
 void bfs(int start, int end, int n_nodes, point_t size){
-	Queue_t* queue = init_queue(1000);
+	Queue_t* queue = init_queue(INTERNAL_QUEUE_SIZE, EXTERNAL_QUEUE_SIZE);
 	
-	int HELD_NODES = 1000;
+	int HELD_NODES = MAX_N_HELD_NODES;
 	if(HELD_NODES > n_nodes)
 		HELD_NODES = n_nodes;
-
-	int* nodes = read_array_binary("neigh.bin", 0, 4*HELD_NODES);
+	
+	int* nodes = read_file_vector(GRAPH_BIN, 0, 4*HELD_NODES);
 	int min_node = 0, max_node = HELD_NODES;
 	
-	char PARENT[] = "parent.bin";
-	init_array_binary(PARENT, n_nodes, -1);
+	init_file_vector(PARENT_BIN, n_nodes, -1);
 	
 	int crt = start;
-	int vis;
-
+	int vis, next;
 	push(queue, crt);
-	update_array_binary(PARENT, crt, crt);
+	update_file_vector(PARENT_BIN, crt, crt);
 	while(queue->internal_size != 0 || queue->external_size != 0){
 		crt = pop(queue);
 		if(crt == end){
@@ -118,23 +117,22 @@ void bfs(int start, int end, int n_nodes, point_t size){
 			min_node = max(max_node-HELD_NODES, 0);
 			
 			free(nodes);
-			nodes = read_array_binary("neigh.bin", 4*min_node, 4*(max_node-min_node));
+			nodes = read_file_vector(GRAPH_BIN, 4*min_node, 4*(max_node-min_node));
 		}
 		if(crt < min_node){
 			min_node = max(crt-HELD_NODES/2, 0);
 			max_node = min(min_node+HELD_NODES, n_nodes);
 
 			free(nodes);
-			nodes = read_array_binary("neigh.bin", 4*min_node, 4*(max_node-min_node));
+			nodes = read_file_vector(GRAPH_BIN, 4*min_node, 4*(max_node-min_node));
 		}
 
 		for(int i = 0; i < 4; i++){
-			int next;
 			next = crt + nodes[(crt-min_node)*4+i];
-			if(next-crt != size.x*size.y){
-				vis = read_digit_binary(PARENT, next);
+			if(next-crt != size.x*size.y+1){
+				vis = read_file_position(PARENT_BIN, next);
 				if(vis == -1){
-					update_array_binary(PARENT, next, crt);
+					update_file_vector(PARENT_BIN, next, crt);
 					push(queue, next);
 				}
 			}
@@ -155,9 +153,6 @@ int get_dir(int Ax, int Ay, int Bx, int By){
 }
 
 void reconstruct_path(int start, int end){
-	char PARENT[] = "parent.bin";
-	char TRANSLATE[] = "trans.bin";
-	
 	int crt = end;
 	int read;
 	int x, y;
@@ -167,19 +162,19 @@ void reconstruct_path(int start, int end){
 	
 	int i = 0;
 	while(crt != start){
-		x = read_digit_binary(TRANSLATE, crt*2);
-		y = read_digit_binary(TRANSLATE, crt*2+1);
+		x = read_file_position(NODE_COORDS_BIN, crt*2);
+		y = read_file_position(NODE_COORDS_BIN, crt*2+1);
 
 		path[i*2] = x;
 		path[i*2+1] = y;
 		i++;
 
-		read = read_digit_binary(PARENT, crt);
+		read = read_file_position(PARENT_BIN, crt);
 
 		crt = read;
 	}
-	x = read_digit_binary(TRANSLATE, start*2);
-	y = read_digit_binary(TRANSLATE, start*2+1);
+	x = read_file_position(NODE_COORDS_BIN, start*2);
+	y = read_file_position(NODE_COORDS_BIN, start*2+1);
 	
 	path[i*2] = x;
 	path[i*2+1] = y;
@@ -195,6 +190,4 @@ void reconstruct_path(int start, int end){
 		l--;
 	}
 	free(path);
-
-
 }

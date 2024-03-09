@@ -6,7 +6,7 @@
 
 #define QUEUE "queue.bin"
 
-Queue_t* init_queue(int capacity){
+Queue_t* init_queue(int internal_capacity, int external_capacity){
 	Queue_t* new = malloc(sizeof(Queue_t));
 
 	if(new == NULL){
@@ -15,14 +15,14 @@ Queue_t* init_queue(int capacity){
 	}
 
 	new->internal_size = 0;
-	new->internal_capacity = capacity;
+	new->internal_capacity = internal_capacity;
 	new->external_size = 0;
-	new->external_capacity = 1024*1024;
+	new->external_capacity = external_capacity;
 	new->external_offset = 0;
 	
 	new->top = NULL;
 	
-	init_array_binary(QUEUE, new->external_capacity, 0);
+	init_file_vector(QUEUE, new->external_capacity, 0);
 
 	return new;
 }
@@ -34,7 +34,7 @@ void push(Queue_t* queue, int value){
 			exit(EXIT_FAILURE);
 		}
 	
-		update_array_binary(QUEUE, queue->external_size, value);
+		update_file_vector(QUEUE, queue->external_size, value);
 
 		queue->external_size++;
 		return;
@@ -72,11 +72,10 @@ int pop(Queue_t* queue){
 		if(reload_cnt > queue->internal_capacity)
 			reload_cnt = queue->internal_capacity;
 		
-		int* entry;
+		int entry;
 		for(int i = 0; i < reload_cnt; i++){
-			entry = read_array_binary(QUEUE, queue->external_offset+i, 1);
-			push(queue, *entry);
-			free(entry);
+			entry = read_file_position(QUEUE, queue->external_offset+i);
+			push(queue, entry);
 		}
 
 		queue->external_size -= reload_cnt;
@@ -101,8 +100,6 @@ void destroy_queue(Queue_t* queue){
 	
 
 	free(queue);
-
-	//destroy file
 }
 
 	

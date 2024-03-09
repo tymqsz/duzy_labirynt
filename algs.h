@@ -3,9 +3,9 @@
 
 #include "data.h"
 
-void load_proper_block(point_t*, box_t*, char*, char**, int*);
+void load_proper_block(point_t*, block_t*, char*, char**, int*);
 
-void extract_nodes(char** lab, point_t size, point_t start, point_t end, box_t* boxes, char* filename, int box);
+void extract_nodes(char**, point_t, point_t, point_t, block_t*, char*, int);
 
 void bfs(int, int, int, point_t);
 #endif

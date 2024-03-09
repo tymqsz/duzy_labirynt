@@ -15,7 +15,7 @@ typedef struct{
 	node_t* top;
 } Queue_t;
 
-Queue_t* init_queue(int);
+Queue_t* init_queue(int, int);
 
 void push(Queue_t*, int);
 
