@@ -3,7 +3,9 @@
 
 #include "data.h"
 
-void lab_to_vec(char* filename, char** vec, block_t block){
+/* wczytanie czesci labiryntu z pliku filename
+   okreslonej przez block */
+void lab_to_arr(char* filename, char** vec, block_t block){
 		FILE* f = fopen(filename, "r");
 		if(f == NULL){
 			fprintf(stderr, "cannot open file %s\n", filename);
@@ -38,9 +40,15 @@ void lab_to_vec(char* filename, char** vec, block_t block){
 
 		fclose(f);
 }
-	
+
+/* inicjalizacja wektora przechowywanego w pliku binarnym
+   o wielkosci size i wartosciach value */
 void init_file_vector(char* filename, int size, int value){
 	FILE* f = fopen(filename, "wb");
+	if(f == NULL){
+		printf("Nie moge otworzyc pliku %s\n", filename);
+		exit(EXIT_FAILURE);
+	}
 	
 	for(int i =  0; i < size; i++)
 		fwrite(&value, sizeof(int), 1, f);
@@ -48,13 +56,19 @@ void init_file_vector(char* filename, int size, int value){
 	fclose(f);
 }
 
+/* wczytanie do wektora danych z pliku binarnego od indeksu 
+   offset w liczbie size */
 int* read_file_vector(char* filename, int offset, int size) {
     FILE* f = fopen(filename, "rb");
+	if(f == NULL){
+		printf("Nie moge otworzyc pliku %s\n", filename);
+		exit(EXIT_FAILURE);
+	}
 	fseek(f, offset*sizeof(int), SEEK_SET);
     
 	int* vec = malloc(sizeof(int) * (size));
 	if(fread(vec, sizeof(int), size, f) != size){
-		perror("read unsuccessful");
+		printf("Nie moge czytac indeksow %d-%d pliku %s\n", offset, offset+size, filename);
 		fclose(f);
 		free(vec);
 		exit(EXIT_FAILURE);
@@ -64,13 +78,18 @@ int* read_file_vector(char* filename, int offset, int size) {
     return vec;
 }
 
+/* wczytanie pozycji offset z pliku binarnego */
 int read_file_position(char* filename, int offset){
 	FILE* f = fopen(filename, "rb");
+	if(f == NULL){
+		printf("Nie moge otworzyc pliku %s\n", filename);
+		exit(EXIT_FAILURE);
+	}
 	fseek(f, offset*sizeof(int), SEEK_SET);
 	
 	int value;
 	if(fread(&value, sizeof(int), 1, f) != 1){
-		perror("read unsuccessful");
+		printf("Nie moge czytac indeksu %d pliku %s\n", offset, filename);
 		fclose(f);
 		exit(EXIT_FAILURE);
 	}
@@ -79,22 +98,28 @@ int read_file_position(char* filename, int offset){
     return value;
 }
 
+/* zamiana pozycji offset na wartosc value w pliku binarnym */
 void update_file_vector(char* filename, int offset, int value){
 	FILE* f = fopen(filename, "r+b");
+	if(f == NULL){
+		printf("Nie moge otworzyc pliku %s\n", filename);
+		exit(EXIT_FAILURE);
+	}
 	fseek(f, offset*sizeof(int), SEEK_SET);
 	
 	if(fwrite(&value, sizeof(int), 1, f) != 1){
-		printf("update unsuccessful\n");
+		printf("Nie moge pisac do indeksu %d pliku %s\n", offset, filename);
 		fclose(f);
 		exit(EXIT_FAILURE);
 	}
 	fclose(f);
 }
 
+/* usuniecie plikow tymczasowych */
 void delete_temp_files(char** temp_files, int n_files){
 	for(int i = 0; i < n_files; i++){
 		if(remove(temp_files[i]) != 0){
-			fprintf(stderr, "couldnt remove %s\n", temp_files[i]);
+			fprintf(stderr, "Nie moge usunac pliku %s\n", temp_files[i]);
 			exit(EXIT_FAILURE);
 		}
 	}

@@ -3,7 +3,8 @@
 
 #include "data.h"
 
-char** zero_vec(point_t size){
+/* inicjalizacja tablicy 2d */
+char** zero_arr(point_t size){
 	char** new = calloc(size.y, sizeof(char*));
 	for (int i = 0; i < size.y; i++)
 		new[i] = calloc(size.x, sizeof(char));
@@ -11,13 +12,16 @@ char** zero_vec(point_t size){
 	return new;
 }
 
-void free_vec(char** vec, point_t size){
+/* zwolnienie pamieci po tablicy 2d */
+void free_arr(char** arr, point_t size){
 	for(int i = 0; i < size.y; i++){
-		free(vec[i]);
+		free(arr[i]);
 	}
-	free(vec);
+	free(arr);
 }
 
+/* funkcja znajdujaca liczbe kolumn i wierszow
+   ktore reprezentuja labirynt */
 point_t get_lab_size(char* filename){
 	FILE* f = fopen(filename, "r");
 	if(f == NULL){
@@ -45,6 +49,8 @@ point_t get_lab_size(char* filename){
 	return size;
 }
 
+/* inicjalizacja bloku (prostokata) opisanego przez dwa punkty:
+   A - lewy gorny rog, B - prawy dolny rog */
 block_t new_block(int x1, int y1, int x2, int y2){
 	point_t A = {x1, y1}, B = {x2, y2};
 
@@ -55,7 +61,8 @@ block_t new_block(int x1, int y1, int x2, int y2){
 	return new;
 }
 
-
+/* podzielenie labiryntu na 9 czesci tak, by krawedzie kazdego bloku
+   zawieraly informacje o przejsciach do sasiednich blokow */
 block_t* divide_into_9_blocks(point_t size){
 	block_t* blocks = malloc(sizeof(block_t)*9);
 	
@@ -110,6 +117,8 @@ int min(int a, int b){
 	return b;
 }
 
+/* funkcja zwracajaca rozmiar najwiekszego
+   z podanych blokow */
 point_t biggest_block(block_t* blocks){
 	point_t size = {0, 0};
 

@@ -1,14 +1,18 @@
 #ifndef DH
 #define DH
 
+/* struktura reprezentujaca
+   punkt w 2d */
 typedef struct{
 	int x;
 	int y;
 } point_t;
 
+/* struktura reprezentujaca 
+   blok labiryntu */
 typedef struct{
-	point_t mini;
-	point_t maxi;
+	point_t mini; /* minimalne wspolrzedne pola labiryntu */
+	point_t maxi; /* maskymalne ------------||----------- */
 } block_t;
 
 char** zero_vec(point_t);
