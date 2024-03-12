@@ -2,18 +2,17 @@
 #define IH
 #include "data.h"
 
-void change_file_position(char*, point_t*, point_t*, char);
+void lab_to_arr(char*, char**, block_t, point_t);
 
-char read_file_position(char*, point_t*, point_t*);
+void load_proper_block(point_t, block_t*, char*, char**, int*, point_t);
 
-void init_visited_file(char*, point_t);
+void init_file_vector(char*, int, int);
 
-void file_to_vec(char*, char**, box_t*);
+int* read_file_vector(char*, int, int);
 
-void init_queue(char*);
+void update_file_vector(char*, int, int);
 
-void append(char*, point_t);
+int read_file_position(char*, int);
 
-point_t top(char*, int);
-
+void delete_temp_files(char**, int);
 #endif

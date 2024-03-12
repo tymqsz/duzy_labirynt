@@ -3,153 +3,83 @@
 
 #include "data.h"
 #include "file_io.h"
+#include "queue.h"
+#include "metadata.h"
 
-int REC_DEPTH = 0;
+void reload_parent(int**, int*, int*, int, int, int);
 
-void load_proper_block(point_t* crt, box_t* boxes, char* filename, char** lab, int* box){
-	if(crt->x > boxes[*box].A.x && crt->x < boxes[*box].B.x && crt->y > boxes[*box].A.y && crt->y < boxes[*box].B.y)
-		return;
+void reload_graph(int**, int*, int*, int, int, int);
 
-	for(int i = 0; i < 9; i++){
-		if((crt->x > boxes[i].A.x && crt->y > boxes[i].A.y && crt->y < boxes[i].B.y && crt->x < boxes[i].B.x)){
-			file_to_vec(filename, lab, &boxes[i]);
-			*box = i;
-			return;
-		}
-	}
+void traverse(int start_node, int end_node, point_t true_size){
+	int n_nodes = true_size.x*true_size.y;
+	int HELD_PARENTS = 1000;
+	int HELD_NODES = 1000;
+	int min_node = 0, max_node = HELD_NODES;
+	int min_parent = 0, max_parent = HELD_PARENTS;
+	if(n_nodes < HELD_PARENTS)
+		HELD_PARENTS = n_nodes;
+	if(n_nodes < HELD_NODES)
+		HELD_NODES = n_nodes;
+
+	Queue_t* queue = init_queue(INTERNAL_QUEUE_SIZE, EXTERNAL_QUEUE_SIZE);
+
+	int node = start_node, next;
+	int EMPTY = true_size.x*true_size.y + 1;
+
+	init_file_vector(PARENT_BIN, n_nodes, EMPTY);
+	update_file_vector(PARENT_BIN, node, node);
+	push(queue, node);
 	
-	fprintf(stderr, "Couldnt load a proper block\n");
-	exit(1);
-}
-
-void traverse2(char** lab, char* INPUT, box_t* boxes, int box, point_t start, point_t end, point_t size){
-	char QUEUE[] = "queue.txt";
-	init_queue(QUEUE);
-	int TOP_LINE = 0;
-	int SIZE = 1;
-	append(QUEUE, start);
-
-	char VISITED[] = "visited.txt";
-	init_visited_file(VISITED, size);
+	int* parent = read_file_vector(PARENT_BIN, node, HELD_PARENTS);
+	int* graph = read_file_vector(GRAPH_BIN, 0, 4*HELD_NODES);
 	
-	point_t crt = start;
-	change_file_position(VISITED, &size, &crt, 1);
-	while(SIZE != 0){
-		crt = top(QUEUE, TOP_LINE);
-		SIZE--;
-		if(crt.x == end.x && crt.y == end.y){
-			printf("found a way out (%d, %d)\n", end.x, end.y);
-			exit(EXIT_SUCCESS);
-		}
-		TOP_LINE++;
+	while(queue->internal_size > 0){
+		node = pop(queue);
 		
-		load_proper_block(&crt, boxes, INPUT, lab, &box);
+		if(node == end_node){
+			printf("found a way out\n");
+			break;
+		}
 
+		reload_graph(&graph, &min_node, &max_node, node, n_nodes, HELD_NODES);
 
-		if (lab[crt.y - boxes[box].A.y][crt.x - 1 - boxes[box].A.x]) {
-			if (crt.x >= 2) {
-				point_t* nxt = malloc(sizeof(point_t));
-				nxt->x = crt.x - 2;
-				nxt->y = crt.y;
-				if (read_file_position(VISITED, &size, nxt) == 0){
-					SIZE++;
-					change_file_position(VISITED, &size, nxt, 1);
-					append(QUEUE, *nxt);
+		for(int i = 0; i < 4; i++){
+			if(graph[(node-min_node)*4+i] != -1){
+				next = graph[(node-min_node)*4+i];
+				
+				reload_parent(&parent, &min_parent, &max_parent, next, n_nodes, HELD_PARENTS);
+				
+				if (parent[next-min_parent] == EMPTY){
+					update_file_vector(PARENT_BIN, next, node);
+					parent[next-min_parent] = node;
+					push(queue, next);
 				}
-				free(nxt);
 			}
 		}
-		if (lab[crt.y - boxes[box].A.y][crt.x + 1 - boxes[box].A.x]) {
-			if (crt.x < size.x) {
-				point_t* nxt = malloc(sizeof(point_t));
-				nxt->x = crt.x + 2;
-				nxt->y = crt.y;
-				if (read_file_position(VISITED, &size, nxt) == 0){
-					SIZE++;
-					append(QUEUE, *nxt);
-					change_file_position(VISITED, &size, nxt, 1);
-				}
-				free(nxt);
-			}
-		}
-		if (lab[crt.y - 1 - boxes[box].A.y][crt.x - boxes[box].A.x]) {
-			if (crt.y >= 2) {
-				point_t* nxt = malloc(sizeof(point_t));
-				nxt->x = crt.x;
-				nxt->y = crt.y - 2;
-				if (read_file_position(VISITED, &size, nxt) == 0){
-					SIZE++;
-					append(QUEUE, *nxt);
-					change_file_position(VISITED, &size, nxt, 1);
-				}
-				free(nxt);
-			}
-		}
-		if (lab[crt.y + 1 - boxes[box].A.y][crt.x - boxes[box].A.x]) {
-			if (crt.y < size.y) {
-				point_t* nxt = malloc(sizeof(point_t));
-				nxt->x = crt.x;
-				nxt->y = crt.y + 2;
-				if (read_file_position(VISITED, &size, nxt) == 0){
-					SIZE++;
-					append(QUEUE, *nxt);
-					change_file_position(VISITED, &size, nxt, 1);
-				}
-				free(nxt);
-			}
-		}
-	}	
+	}
+
+	free(graph);
+	free(parent);
 }
 
-
-void traverse(char** lab, char* visited, char* filename, int* box, box_t* boxes, point_t* size, point_t* end, point_t* crt){
-	if (crt->x == end->x && crt->y == end->y) {
-		printf("found a way out\n");
-		exit(EXIT_SUCCESS);
-	}
-	
-	change_file_position(visited, size, crt, 1);
-
-	// make a loop (moving vectors)
-	load_proper_block(crt, boxes, filename, lab, box);
-	if (lab[crt->y - boxes[*box].A.y][crt->x - 1 - boxes[*box].A.x]) {
-		if (crt->x >= 2) {
-			crt->x -= 2;
-			if (read_file_position(visited, size, crt) == 0) {
-				traverse(lab, visited, filename, box, boxes, size, end, crt);
-			}
-			crt->x += 2;
+void reload_parent(int** parent, int* min_parent, int* max_parent, int crt, int n_nodes, int HELD_PARENTS){
+		if(crt < *min_parent || crt >= *max_parent){
+			*min_parent = max(0, crt - HELD_PARENTS/2);
+			*max_parent = min(n_nodes, *min_parent+HELD_PARENTS);
+			
+			free(*parent);
+			
+			*parent = read_file_vector(PARENT_BIN, *min_parent, *max_parent-*min_parent);
 		}
-	}
+}
 
-	load_proper_block(crt, boxes, filename, lab, box);
-	if (lab[crt->y - boxes[*box].A.y][crt->x + 1 - boxes[*box].A.x]) {
-		if (crt->x + 2 < size->x) {
-			crt->x += 2;
-			if (read_file_position(visited, size, crt) == 0)
-				traverse(lab, visited, filename, box, boxes, size, end, crt);
-			crt->x -= 2;
+void reload_graph(int** graph, int* min_node, int* max_node, int crt, int n_nodes, int HELD_NODES){
+		if(crt < *min_node || crt >= *max_node){
+			*min_node = max(0, crt-HELD_NODES/2);
+			*max_node = min(*min_node+HELD_NODES, n_nodes);
+
+			free(*graph);
+
+			*graph = read_file_vector(GRAPH_BIN, 4*(*min_node), (*max_node-*min_node)*4);
 		}
-	}
-
-	load_proper_block(crt, boxes, filename, lab, box);
-	if (lab[crt->y - 1 - boxes[*box].A.y][crt->x - boxes[*box].A.x]) {
-		if (crt->y >= 2) {
-			crt->y -= 2;
-
-			if (read_file_position(visited, size, crt) == 0)
-				traverse(lab, visited, filename, box, boxes, size, end, crt);
-			crt->y += 2;
-		}
-	}
-
-	load_proper_block(crt, boxes, filename, lab, box);
-	if (lab[crt->y + 1 - boxes[*box].A.y][crt->x - boxes[*box].A.x]) {
-		if (crt->y + 2 < size->y) {
-			crt->y += 2;
-			if (read_file_position(visited, size, crt) == 0)
-				traverse(lab, visited, filename, box, boxes, size, end, crt);
-        crt->y -= 2;
-		}
-	}
 }
