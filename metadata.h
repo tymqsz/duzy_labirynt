@@ -5,6 +5,7 @@
 #define GRAPH_BIN "graph.bin"
 #define NODE_COORDS_BIN "nc.bin"
 #define PARENT_BIN "parent.bin"
+#define PATH_BIN "path.bin"
 
 #define INTERNAL_QUEUE_SIZE 1000
 #define EXTERNAL_QUEUE_SIZE 1048576
