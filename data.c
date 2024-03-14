@@ -6,7 +6,7 @@
 #include "metadata.h"
 
 /* inicjalizacja tablicy 2d */
-char** zero_arr(point_t size){
+char** zero_array(point_t size){
 	char** new = calloc(size.y, sizeof(char*));
 	for (int i = 0; i < size.y; i++)
 		new[i] = calloc(size.x, sizeof(char));
@@ -15,44 +15,55 @@ char** zero_arr(point_t size){
 }
 
 /* zwolnienie pamieci po tablicy 2d */
-void free_arr(char** arr, point_t size){
+void free_array(char** array, point_t size){
 	for(int i = 0; i < size.y; i++){
-		free(arr[i]);
+		free(array[i]);
 	}
-	free(arr);
+	free(array);
 }
 
-void lab_to_bin_file(char* input_file, point_t size, block_t* blocks, point_t buffor_size){
-	int n_nodes = size.x*size.y;
-	init_file_vector(GRAPH_BIN, 4*n_nodes, -1);
+/* funkcja przepisujaca labirynt z pliku tekstowego do binarnego */
+void lab_to_bin_file(char* input_file, point_t true_size, block_t* blocks, point_t buffor_size){
+	int n_nodes = true_size.x*true_size.y;
+	init_file_vector(GRAPH_BIN, 4*n_nodes, -1); /* inicjalizacja wektora przechowywanego w pliku
+												   o rozmiarze 4*liczba wierzcholkow (po 4 sasiadow) */
 	
-	point_t lab_size = {size.x*2+1, size.y*2+1};
-	char** lab = zero_arr(buffor_size);
+	point_t size = {true_size.x*2+1, true_size.y*2+1}; 
 	
+	/* inicjalizacja tablicy do przechowywania czesci labiryntu,
+	   wczytanie pierwszego bloku */
+	char** lab = zero_array(buffor_size);
 	int block = 0;
-	lab_to_arr(input_file, lab, blocks[0], lab_size);
+	lab_to_array(input_file, lab, blocks[0], size);
 	
+	/* przejscie po calym labiryncie i zapisanie informacji
+	   o sasiadach wierzcholkow w pliku binarnym*/
 	point_t crt;
 	for(int node = 0; node < n_nodes; node++){
-		crt.y = 2*(node/size.x)+1;
-		crt.x = 2*(node%size.x)+1;
-		load_proper_block(crt, blocks, input_file, lab, &block, lab_size);
+		/* obliczenie pozycji danego wierzcholka
+		   w tekstowym pliku wejsciowym */
+		crt.y = 2*(node/true_size.x)+1;
+		crt.x = 2*(node%true_size.x)+1;
 		
+		/* doczytanie odpowiedniej czesci labiryntu */
+		load_proper_block(crt, blocks, input_file, lab, &block, size); 
+		
+		/* zapisanie informacji o przejsciach do sasiednich wierzcholkow */
 		if(crt.x > 2 && lab[crt.y - blocks[block].mini.y][crt.x - blocks[block].mini.x -1])
 			update_file_vector(GRAPH_BIN, node*4, node-1);
-		if(crt.x + 2 < lab_size.x && lab[crt.y - blocks[block].mini.y][crt.x - blocks[block].mini.x +1])
+		if(crt.x + 2 < size.x && lab[crt.y - blocks[block].mini.y][crt.x - blocks[block].mini.x +1])
 			update_file_vector(GRAPH_BIN, node*4+1, node+1);
 		if(crt.y > 2 && lab[crt.y - blocks[block].mini.y-1][crt.x - blocks[block].mini.x])
-			update_file_vector(GRAPH_BIN, node*4+2, node-size.x);
-		if(crt.y + 2 < lab_size.y && lab[crt.y - blocks[block].mini.y+1][crt.x - blocks[block].mini.x])
-			update_file_vector(GRAPH_BIN, node*4+3, node+size.x);
+			update_file_vector(GRAPH_BIN, node*4+2, node-true_size.x);
+		if(crt.y + 2 < size.y && lab[crt.y - blocks[block].mini.y+1][crt.x - blocks[block].mini.x])
+			update_file_vector(GRAPH_BIN, node*4+3, node+true_size.x);
 	}
 
-	free_arr(lab, buffor_size);
+	free_array(lab, buffor_size);
 }
 
-/* funkcja znajdujaca liczbe kolumn i wierszow
-   ktore reprezentuja labirynt */
+/* funkcja znajdujaca liczbe kolumn i wierszy
+   ktore reprezentuja labirynt w pliku .txt */
 point_t get_lab_size(char* filename){
 	FILE* f = fopen(filename, "r");
 	if(f == NULL){

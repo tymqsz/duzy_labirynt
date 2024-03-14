@@ -2,7 +2,7 @@
 #define IH
 #include "data.h"
 
-void lab_to_arr(char*, char**, block_t, point_t);
+void lab_to_array(char*, char**, block_t, point_t);
 
 void load_proper_block(point_t, block_t*, char*, char**, int*, point_t);
 
