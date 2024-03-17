@@ -92,7 +92,7 @@ int get_dir_index(point_t dir){
 		return 3;
 }
 
-/* funkcja zapisujaca znaleziona scizeke do pliku */
+/* funkcja zapisujaca znaleziona sciezke do pliku */
 void reconstruct_path(int start, int end, point_t true_size){
 	int crt = end;
 	int read;
