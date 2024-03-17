@@ -67,7 +67,7 @@ void lab_to_bin_file(char* input_file, point_t true_size, block_t* blocks, point
 point_t get_lab_size(char* filename){
 	FILE* f = fopen(filename, "r");
 	if(f == NULL){
-		fprintf(stderr, "cannot open file %s\n", filename);
+		fprintf(stderr, "nie ma pliku o takiej nazwie %s\n", filename);
 		exit(1);
 	}
 	
