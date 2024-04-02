@@ -16,10 +16,17 @@ int main(int argc, char** argv){
 	if(argc > 1)
 		verbose = atoi(argv[1]);
 	
+	/* BINARY INPUT */
+	point_t lab_size;
+	get_lab_info(&lab_size);
+	
+	convert_to_txt("maze.bin", INPUT, lab_size);
+
 	/* znalezienie rozmiaru pliku wejsciowego i labiryntu */
-	point_t lab_size = get_lab_size(INPUT);
+	//point_t lab_size = get_lab_size(INPUT);
 	point_t true_size = {(lab_size.x-1)/2, (lab_size.y-1)/2};
 	
+
 	lab_to_bin_file(INPUT, true_size);
 	if(verbose)
 		printf("labirynt przepisany do pliku binarnego\n");

@@ -3,6 +3,69 @@
 
 #include "data.h"
 
+/* BINARY INPUT */
+void get_lab_info(point_t* size) {
+    FILE* f = fopen("maze.bin", "rb");
+    if (f == NULL) {
+        printf("Error opening file.\n");
+        return;
+    }
+
+    fseek(f, 5, SEEK_SET); // Move to the start of data section
+
+    short int cols, rows, entry_x, entry_y, exit_x, exit_y;
+    fread(&cols, sizeof(short int), 1, f); // Use short int for reading 2-byte integers
+    fread(&rows, sizeof(short int), 1, f);
+    fread(&entry_x, sizeof(short int), 1, f);
+    fread(&entry_y, sizeof(short int), 1, f);
+    fread(&exit_x, sizeof(short int), 1, f);
+    fread(&exit_y, sizeof(short int), 1, f);
+
+	fseek(f, 37, SEEK_SET);
+
+	char sep, w, p;
+	fread(&sep, 1, 1, f);
+	fread(&w, 1, 1, f);
+	fread(&p, 1, 1, f);
+
+	size->x = cols;
+	size->y = rows;
+
+    fclose(f);
+}
+
+void convert_to_txt(char* input, char* output, point_t lab_size){
+	FILE* in = fopen(input, "rb");
+	FILE* out = fopen(output, "w");
+	
+	printf("%d %d \n", lab_size.x, lab_size.y);
+	fseek(in, 40, SEEK_SET);
+
+	int count = 0;
+	int target = lab_size.x*lab_size.y;
+	
+
+	char g, val;
+	unsigned char cnt;
+	while(count < target){
+		fread(&g, 1, 1, in);
+		fread(&val, 1, 1, in);
+		fread(&cnt, 1, 1, in);
+		
+		count += (cnt+1);
+
+		for(int i = 0; i < cnt+1; i++)
+			fprintf(out, "%c", val);
+		if( count % lab_size.x == 0)
+			fprintf(out, "\n");
+	}
+	
+	fclose(in);
+	fclose(out);
+}
+
+/* END OF BINARY INPUT */
+
 /* wczytanie czesci labiryntu z pliku tekstowego
    okreslonej przez blok */
 void lab_to_array(char* filename, char** vec, block_t block, point_t size){
