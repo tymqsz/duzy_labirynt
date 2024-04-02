@@ -19,7 +19,7 @@ char** zero_arr(point_t);
 
 point_t get_lab_size(char*);
 
-void lab_to_bin_file(char*, point_t, block_t*, point_t);
+void lab_to_bin_file(char*, point_t);
 
 block_t new_block(int, int, int, int);
 

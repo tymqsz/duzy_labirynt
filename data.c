@@ -22,33 +22,50 @@ void free_arr(char** arr, point_t size){
 	free(arr);
 }
 
-void lab_to_bin_file(char* input_file, point_t size, block_t* blocks, point_t buffor_size){
+void lab_to_bin_file(char* input_file, point_t size){
 	int n_nodes = size.x*size.y;
 	init_file_vector(GRAPH_BIN, 4*n_nodes, -1);
 	
 	point_t lab_size = {size.x*2+1, size.y*2+1};
-	char** lab = zero_arr(buffor_size);
 	
-	int block = 0;
-	lab_to_arr(input_file, lab, blocks[0], lab_size);
+	FILE* f = fopen(input_file, "r");
 	
+	int i = 0;
 	point_t crt;
-	for(int node = 0; node < n_nodes; node++){
-		crt.y = 2*(node/size.x)+1;
-		crt.x = 2*(node%size.x)+1;
-		load_proper_block(crt, blocks, input_file, lab, &block, lab_size);
+	char c;
+	int node;
+	while(i < lab_size.x*lab_size.y){
+		crt.y = i / lab_size.x;
+		crt.x = i % lab_size.x;
 		
-		if(crt.x > 2 && lab[crt.y - blocks[block].mini.y][crt.x - blocks[block].mini.x -1])
-			update_file_vector(GRAPH_BIN, node*4, node-1);
-		if(crt.x + 2 < lab_size.x && lab[crt.y - blocks[block].mini.y][crt.x - blocks[block].mini.x +1])
-			update_file_vector(GRAPH_BIN, node*4+1, node+1);
-		if(crt.y > 2 && lab[crt.y - blocks[block].mini.y-1][crt.x - blocks[block].mini.x])
-			update_file_vector(GRAPH_BIN, node*4+2, node-size.x);
-		if(crt.y + 2 < lab_size.y && lab[crt.y - blocks[block].mini.y+1][crt.x - blocks[block].mini.x])
-			update_file_vector(GRAPH_BIN, node*4+3, node+size.x);
-	}
 
-	free_arr(lab, buffor_size);
+		c = fgetc(f);
+		if(c == '\n')
+			continue;
+		
+		if(crt.y % 2 == 1 && crt.x % 2 == 0 && c == ' '){
+			if (crt.x > 0){
+				node = size.x*(crt.y-1)/2 + (crt.x-2)/2;
+				update_file_vector(GRAPH_BIN, node*4+1, node+1);
+			}
+			if (crt.x < lab_size.x){
+				node = size.x*(crt.y-1)/2 + (crt.x)/2;
+				update_file_vector(GRAPH_BIN, node*4, node-1);
+			}
+		}
+		if(crt.y % 2 == 0 && crt.x % 2 == 1 && c == ' '){
+			if (crt.y > 0){
+				node = size.x*(crt.y-2)/2 + (crt.x-1)/2;
+				update_file_vector(GRAPH_BIN, node*4+3, node+size.x);
+			}
+			if (crt.y < lab_size.y){
+				node = size.x*(crt.y)/2 + (crt.x-1)/2;
+				update_file_vector(GRAPH_BIN, node*4+2, node-size.x);
+			}
+		}
+		i++;
+	}
+	fclose(f);
 }
 
 /* funkcja znajdujaca liczbe kolumn i wierszow

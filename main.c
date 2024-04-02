@@ -23,11 +23,11 @@ int main(int argc, char** argv){
 	point_t buffor_size = biggest_block(blocks);
 	if(verbose)
 		printf("labirynt podzielony, najwiekszy blok: %dkb\n", buffor_size.x*buffor_size.y/1000);
-
-	lab_to_bin_file(INPUT, true_size, blocks, buffor_size);
+	
+	lab_to_bin_file(INPUT, true_size);
 	if(verbose)
 		printf("labirynt przepisany do pliku binarnego\n");
-
+	
 	int start_node = 0, end_node = true_size.x*true_size.y - 1;
 	traverse(start_node, end_node, true_size);
 	
