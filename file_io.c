@@ -3,9 +3,9 @@
 
 #include "data.h"
 
-/* wczytanie czesci labiryntu z pliku filename
-   okreslonej przez block */
-void lab_to_arr(char* filename, char** vec, block_t block, point_t size){
+/* wczytanie czesci labiryntu z pliku tekstowego
+   okreslonej przez blok */
+void lab_to_array(char* filename, char** vec, block_t block, point_t size){
 		FILE* f = fopen(filename, "r");
 		if(f == NULL){
 			fprintf(stderr, "cannot open file %s\n", filename);
@@ -14,7 +14,9 @@ void lab_to_arr(char* filename, char** vec, block_t block, point_t size){
 		
 		int x = 0, y = 0;
 		int c;
-		fseek(f, block.mini.y*(size.x+1)+block.mini.x, SEEK_SET);
+
+		/* przejdz do pozycji startowej (lewy gorny rog bloku), +1 bo '\n' */
+		fseek(f, block.mini.y*(size.x+1)+block.mini.x, SEEK_SET); 
 		x = block.mini.x;
 		y = block.mini.y;
 		
@@ -35,8 +37,8 @@ void lab_to_arr(char* filename, char** vec, block_t block, point_t size){
 		fclose(f);
 }
 
-/* funkcja wczytujaca odpowiednia czesc labiryntu na podstawie
-   aktualnej pozycji opisanej zmienna crt */
+/* funkcja znajdujaca odpowiedni blok w ktorym zawiera sie pole crt
+   i wywolujaca funkcje lab_to_array */
 void load_proper_block(point_t crt, block_t* blocks, char* filename, char** lab, int *block_index, point_t size){
 	/* jesli crt zawiera sie w aktualnie wczytanym bloku, nie rob nic */
 	if(crt.x > blocks[*block_index].mini.x && crt.x < blocks[*block_index].maxi.x &&
@@ -47,7 +49,7 @@ void load_proper_block(point_t crt, block_t* blocks, char* filename, char** lab,
 		if(crt.x > blocks[i].mini.x && crt.x < blocks[i].maxi.x &&
 		   crt.y > blocks[i].mini.y && crt.y < blocks[i].maxi.y){
 			/* wczytanie blocku i zmiana indeksu bloku */
-			lab_to_arr(filename, lab, blocks[i], size);
+			lab_to_array(filename, lab, blocks[i], size);
 			*block_index = i;
 			return;
 		}

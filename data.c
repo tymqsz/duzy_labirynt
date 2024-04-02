@@ -6,7 +6,7 @@
 #include "metadata.h"
 
 /* inicjalizacja tablicy 2d */
-char** zero_arr(point_t size){
+char** zero_array(point_t size){
 	char** new = calloc(size.y, sizeof(char*));
 	for (int i = 0; i < size.y; i++)
 		new[i] = calloc(size.x, sizeof(char));
@@ -15,11 +15,11 @@ char** zero_arr(point_t size){
 }
 
 /* zwolnienie pamieci po tablicy 2d */
-void free_arr(char** arr, point_t size){
+void free_array(char** array, point_t size){
 	for(int i = 0; i < size.y; i++){
-		free(arr[i]);
+		free(array[i]);
 	}
-	free(arr);
+	free(array);
 }
 
 void lab_to_bin_file(char* input_file, point_t size){
@@ -68,12 +68,12 @@ void lab_to_bin_file(char* input_file, point_t size){
 	fclose(f);
 }
 
-/* funkcja znajdujaca liczbe kolumn i wierszow
-   ktore reprezentuja labirynt */
+/* funkcja znajdujaca liczbe kolumn i wierszy
+   ktore reprezentuja labirynt w pliku .txt */
 point_t get_lab_size(char* filename){
 	FILE* f = fopen(filename, "r");
 	if(f == NULL){
-		fprintf(stderr, "cannot open file %s\n", filename);
+		fprintf(stderr, "nie ma pliku o takiej nazwie %s\n", filename);
 		exit(1);
 	}
 	
@@ -109,49 +109,6 @@ block_t new_block(int x1, int y1, int x2, int y2){
 	return new;
 }
 
-/* podzielenie labiryntu na 9 czesci tak, by krawedzie kazdego bloku
-   zawieraly informacje o przejsciach do sasiednich blokow */
-block_t* divide_into_9_blocks(point_t size){
-	block_t* blocks = malloc(sizeof(block_t)*9);
-	
-	int x1, x2, x3;
-	int y1, y2, y3;
-
-	x1 = size.x/3;
-	x2 = 2*(size.x/3)-1;
-	x3 = size.x;
-	
-	y1 = size.y/3;
-	y2 = 2*(size.y/3)-1;
-	y3 = size.y;
-	
-	if(x1 % 2 == 0)
-		x1 += 1;
-	if(x2 % 2 == 0)
-		x2 += 1;
-	if(x3 % 2 == 0)
-		x3 += 1;
-	if(y1 % 2 == 0)
-		y1 += 1;
-	if(y2 % 2 == 0)
-		y2 += 1;
-	if(y3 % 2 == 0)
-		y3 += 1;
-	
-	blocks[0] = new_block(0, 0, x1, y1);
-	blocks[1] = new_block(x1-1, 0, x2, y1);
-	blocks[2] = new_block(x2-3, 0, x3, y1);
-
-	blocks[3] = new_block(0, y1-1, x1, y2);
-	blocks[4] = new_block(x1-1, y1-1, x2,y2);
-	blocks[5] = new_block(x2-3, y1-1, x3, y2);
-
-	blocks[6] = new_block(0, y2-3, x1, y3);
-	blocks[7] = new_block(x1-1, y2-3, x2, y3);
-	blocks[8] = new_block(x2-3, y2-3, x3, y3);
-	
-	return blocks;
-}
 
 int max(int a, int b){
 	if(a > b)
@@ -163,17 +120,4 @@ int min(int a, int b){
 	if(a < b)
 		return a;
 	return b;
-}
-
-/* funkcja zwracajaca rozmiar najwiekszego
-   z podanych blokow */
-point_t biggest_block(block_t* blocks){
-	point_t size = {0, 0};
-
-	for(int i = 0; i < 9; i++){
-		size.x = max(blocks[i].maxi.x-blocks[i].mini.x, size.x);
-		size.y = max(blocks[i].maxi.y-blocks[i].mini.y, size.y);
-	}
-
-	return size;
 }
