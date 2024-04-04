@@ -1,0 +1,4 @@
+1. znajdowanie pocz./kon.
+2. wypisywanie lab+sciezki do binarnego
+3. kody bledow
+4. getopt
