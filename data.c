@@ -5,23 +5,6 @@
 #include "file_io.h"
 #include "metadata.h"
 
-/* inicjalizacja tablicy 2d */
-char** zero_array(point_t size){
-	char** new = calloc(size.y, sizeof(char*));
-	for (int i = 0; i < size.y; i++)
-		new[i] = calloc(size.x, sizeof(char));
-
-	return new;
-}
-
-/* zwolnienie pamieci po tablicy 2d */
-void free_array(char** array, point_t size){
-	for(int i = 0; i < size.y; i++){
-		free(array[i]);
-	}
-	free(array);
-}
-
 void lab_to_bin_file(char* input_file, point_t size){
 	int n_nodes = size.x*size.y;
 	init_file_vector(GRAPH_BIN, 4*n_nodes, -1);
@@ -96,19 +79,6 @@ point_t get_lab_size(char* filename){
 	fclose(f);
 	return size;
 }
-
-/* inicjalizacja bloku (prostokata) opisanego przez dwa punkty:
-   A - lewy gorny rog, B - prawy dolny rog */
-block_t new_block(int x1, int y1, int x2, int y2){
-	point_t A = {x1, y1}, B = {x2, y2};
-
-	block_t new;	
-	new.mini = A;
-	new.maxi = B;
-
-	return new;
-}
-
 
 int max(int a, int b){
 	if(a > b)
