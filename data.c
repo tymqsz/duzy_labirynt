@@ -5,7 +5,7 @@
 #include "file_io.h"
 #include "metadata.h"
 
-void lab_to_bin_file(char* input_file, point_t size){
+void graph_to_bin_file(char* input_file, point_t size){
 	int n_nodes = size.x*size.y;
 	init_file_vector(GRAPH_BIN, 4*n_nodes, -1);
 	
@@ -53,20 +53,19 @@ void lab_to_bin_file(char* input_file, point_t size){
 
 /* funkcja znajdujaca liczbe kolumn i wierszy
    ktore reprezentuja labirynt w pliku .txt */
-point_t get_lab_size(char* filename){
+void lab_info_txt(char* filename, point_t* lab_size){
 	FILE* f = fopen(filename, "r");
 	if(f == NULL){
 		fprintf(stderr, "nie ma pliku o takiej nazwie %s\n", filename);
 		exit(1);
 	}
 	
-	point_t size;
 	int c;
 	int x = 0, y = 0;
 	int row_len_found = 0;
 	while((c = fgetc(f)) != EOF){
 		if(c == '\n' && !row_len_found){
-			size.x = x;
+			lab_size->x = x;
 			row_len_found = 1;
 		}
 		else if(c == '\n'){
@@ -74,10 +73,9 @@ point_t get_lab_size(char* filename){
 		}
 		x += 1;
 	}
-	size.y = y+1;
+	lab_size->y = y+1;
 	
 	fclose(f);
-	return size;
 }
 
 int max(int a, int b){

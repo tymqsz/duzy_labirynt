@@ -3,9 +3,8 @@
 
 #include "data.h"
 
-/* BINARY INPUT */
-void get_lab_info(point_t* size) {
-    FILE* f = fopen("maze.bin", "rb");
+void lab_info_binary(char* input, point_t* size) {
+    FILE* f = fopen(input, "rb");
     if (f == NULL) {
         printf("Error opening file.\n");
         return;
@@ -34,7 +33,7 @@ void get_lab_info(point_t* size) {
     fclose(f);
 }
 
-void convert_to_txt(char* input, char* output, point_t lab_size){
+void binary_to_txt(char* input, char* output, point_t lab_size){
 	FILE* in = fopen(input, "rb");
 	FILE* out = fopen(output, "w");
 	
@@ -63,9 +62,6 @@ void convert_to_txt(char* input, char* output, point_t lab_size){
 	fclose(in);
 	fclose(out);
 }
-
-/* END OF BINARY INPUT */
-
 
 /* inicjalizacja wektora przechowywanego w pliku binarnym
    o wielkosci size i wartosciach value */
