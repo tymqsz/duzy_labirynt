@@ -25,7 +25,7 @@ int main(int argc, char** argv){
 	point_t lab_size, start, end;
 	if(strstr(input_filename, ".bin") != NULL){
 		lab_info_binary(input_filename, &lab_size, &start, &end);
-		
+
 		binary_to_txt(input_filename, "lab.txt", lab_size);
 		input_filename = "lab.txt";
 	}

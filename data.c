@@ -166,11 +166,11 @@ void lab_info_binary(char* filename, point_t* size, point_t* start, point_t* end
 	size->x = cols;
 	size->y = rows;
 	
-	start->x = entry_x;
-	start->y = entry_y;
+	start->x = entry_x-1;
+	start->y = entry_y-1;
 
-	end->x = exit_x;
-	end->y = exit_y;
+	end->x = exit_x-1;
+	end->y = exit_y-1;
 
     fclose(f);
 }
