@@ -19,30 +19,34 @@ int main(int argc, char** argv){
 		exit(EXIT_FAILURE);
 	}
 	
-	int verbose = argc > 2 ? atoi(argv[1]) : 0;
-	
+	int verbose = argc > 2 ? atoi(argv[2]) : 0;
 	
 	/* obsluga binarnego/tekstowego pliku wejsciowego */
-	point_t lab_size;
+	point_t lab_size, start, end;
 	if(strstr(input_filename, ".bin") != NULL){
-		lab_info_binary(input_filename, &lab_size);
+		lab_info_binary(input_filename, &lab_size, &start, &end);
 		
 		binary_to_txt(input_filename, "lab.txt", lab_size);
 		input_filename = "lab.txt";
 	}
 	else{
-		lab_info_txt(input_filename, &lab_size);
+		lab_info_txt(input_filename, &lab_size, &start, &end);
 	}
+	int start_node = coords_to_node(start, lab_size);
+	int end_node = coords_to_node(end, lab_size);
 	point_t true_size = {(lab_size.x-1)/2, (lab_size.y-1)/2};
+	
+	if(verbose)
+		printf("plik wczytany\n");
 
-	/* utworzenie grafo na podst. labiryntu
+	/* utworzenie grafu na podst. labiryntu
 	   i zapisanie go w pliku GRAPH_BIN */
 	graph_to_bin_file(input_filename, true_size);
+	
 	if(verbose)
 		printf("labirynt przepisany do pliku binarnego\n");
 	
 	/* przejscie po labiryncie i zapisanie sciezki */
-	int start_node = 0, end_node = true_size.x*true_size.y - 1; /*do poprawy */
 	traverse(start_node, end_node, true_size);
 	
 	/* usuniecie plikow tymczasowych */

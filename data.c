@@ -5,6 +5,35 @@
 #include "file_io.h"
 #include "metadata.h"
 
+void binary_to_txt(char* input, char* output, point_t lab_size){
+	FILE* in = fopen(input, "rb");
+	FILE* out = fopen(output, "w");
+	
+	fseek(in, 40, SEEK_SET);
+
+	int count = 0;
+	int target = lab_size.x*lab_size.y;
+	
+
+	char g, val;
+	unsigned char cnt;
+	while(count < target){
+		fread(&g, 1, 1, in);
+		fread(&val, 1, 1, in);
+		fread(&cnt, 1, 1, in);
+		
+		count += (cnt+1);
+
+		for(int i = 0; i < cnt+1; i++)
+			fprintf(out, "%c", val);
+		if( count % lab_size.x == 0)
+			fprintf(out, "\n");
+	}
+	
+	fclose(in);
+	fclose(out);
+}
+
 void graph_to_bin_file(char* input_file, point_t size){
 	int n_nodes = size.x*size.y;
 	init_file_vector(GRAPH_BIN, 4*n_nodes, -1);
@@ -53,13 +82,14 @@ void graph_to_bin_file(char* input_file, point_t size){
 
 /* funkcja znajdujaca liczbe kolumn i wierszy
    ktore reprezentuja labirynt w pliku .txt */
-void lab_info_txt(char* filename, point_t* lab_size){
+void lab_info_txt(char* filename, point_t* lab_size, point_t* start, point_t* end){
 	FILE* f = fopen(filename, "r");
 	if(f == NULL){
-		fprintf(stderr, "nie ma pliku o takiej nazwie %s\n", filename);
+		fprintf(stderr, "Nie moge czytac pliku %s\n", filename);
 		exit(1);
 	}
 	
+	/* znalezienie rozmiaru pliku */
 	int c;
 	int x = 0, y = 0;
 	int row_len_found = 0;
@@ -75,7 +105,74 @@ void lab_info_txt(char* filename, point_t* lab_size){
 	}
 	lab_size->y = y+1;
 	
+	/* znalezienie wejscia i wyjscia */
+	x = 0, y = 0;
+	fseek(f, 0, SEEK_SET);
+	while((c = fgetc(f)) != EOF){
+		if((x == 0 || y == 0) && c == 'P'){
+			start->x = x;
+			start->y = y;
+		}
+		if((x == lab_size->x-1 || y == lab_size->y-1) && c == 'K'){
+			end->x = x;
+			end->y = y;
+		}
+
+		x += 1;
+		if(c == '\n'){
+			y += 1;
+			x = 0;
+		}
+	}
+	
 	fclose(f);
+}
+
+int coords_to_node(point_t coords, point_t lab_size){
+	if(coords.x ==  0)
+		coords.x++;
+	else if(coords.y == 0)
+		coords.y++;
+	else if(coords.x == lab_size.x-1)
+		coords.x--;
+	else if(coords.y == lab_size.y-1)
+		coords.y--;
+
+	int node;
+
+	node = (coords.x-1)/2 + (coords.y-1)/2*(lab_size.x-1)/2;
+
+	return node;
+}
+
+void lab_info_binary(char* filename, point_t* size, point_t* start, point_t* end) {
+    FILE* f = fopen(filename, "rb");
+    if (f == NULL) {
+        printf("Nie moge czytac pliku %s\n", filename);
+        exit(1);
+    }
+
+    fseek(f, 5, SEEK_SET);
+
+    short int cols, rows, entry_x, entry_y, exit_x, exit_y;
+    fread(&cols, sizeof(short int), 1, f); 
+    fread(&rows, sizeof(short int), 1, f);
+    fread(&entry_x, sizeof(short int), 1, f);
+    fread(&entry_y, sizeof(short int), 1, f);
+    fread(&exit_x, sizeof(short int), 1, f);
+    fread(&exit_y, sizeof(short int), 1, f);
+
+
+	size->x = cols;
+	size->y = rows;
+	
+	start->x = entry_x;
+	start->y = entry_y;
+
+	end->x = exit_x;
+	end->y = exit_y;
+
+    fclose(f);
 }
 
 int max(int a, int b){

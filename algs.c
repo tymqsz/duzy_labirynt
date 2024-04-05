@@ -22,13 +22,13 @@ void traverse(int start_node, int end_node, point_t true_size){
 	int n_nodes = true_size.x*true_size.y;
 	int HELD_PARENTS = 60000; /* liczba trzymanych indeksow wektora parent w jednym czasie */
 	int HELD_NODES = 60000; /* liczba trzymanych indeksow wektora graph w jednym czasie */
-	int min_node = 0, max_node = HELD_NODES; /* przedzial trzymanych indeksow wektora graph */
-	int min_parent = 0, max_parent = HELD_PARENTS; /* przedzial trzymanych indeksow wektora parent */
-	if(n_nodes < HELD_PARENTS)
-		HELD_PARENTS = n_nodes; /* trzymaj maksymalnie wszystkie wierzcholki */
-	if(n_nodes < HELD_NODES)
-		HELD_NODES = n_nodes; /* trzymaj maksymalnie wszystkie wierzcholki */
-
+	if(n_nodes < start_node+HELD_PARENTS)
+		HELD_PARENTS = n_nodes-start_node; /* trzymaj maksymalnie wierzcholki od poczatkowego do ostatniego */
+	if(n_nodes < start_node+HELD_NODES)
+		HELD_NODES = n_nodes-start_node; /* trzymaj maksymalnie wierzcholki od poczatkowego do ostatniego */
+	int min_node = start_node, max_node = HELD_NODES; /* przedzial trzymanych indeksow wektora graph */
+	int min_parent = start_node, max_parent = HELD_PARENTS; /* przedzial trzymanych indeksow wektora parent */
+	
 	Queue_t* queue = init_queue(INTERNAL_QUEUE_SIZE, EXTERNAL_QUEUE_SIZE); 
 
 	int node = start_node, next;
@@ -39,8 +39,7 @@ void traverse(int start_node, int end_node, point_t true_size){
 	push(queue, node); /* dodanie pierwszego wierzcholka do kolejki */
 	
 	int* parent = read_file_vector(PARENT_BIN, node, HELD_PARENTS); /* wczytanie pierwszej czesc wektora parent */
-	int* graph = read_file_vector(GRAPH_BIN, 0, 4*HELD_NODES); /* wczytanie pierwszej czesc wektora graph */
-	
+	int* graph = read_file_vector(GRAPH_BIN, node*4, 4*HELD_NODES); /* wczytanie pierwszej czesc wektora graph */
 	while(queue->internal_size > 0){
 		node = pop(queue); /* zdjecie pierwszego wierzcholka z kolejki */
 		if(node == end_node){
@@ -93,23 +92,23 @@ int get_dir_index(point_t dir){
 }
 
 /* funkcja zapisujaca znaleziona sciezke do pliku */
-void reconstruct_path(int start, int end, point_t true_size){
-	int crt = end;
+void reconstruct_path(int start_node, int end_node, point_t true_size){
+	int crt = end_node;
 	int read;
 	 
 	init_file_vector(PATH_BIN, true_size.x*true_size.y, -1); /* inicjalizacja pliku binarnego
 																do przechowywania sciazki */
 	/* przepisanie sciezki do pliku binarnego */
-	int node = 0;
-	while(crt != start){
+	int nodes_cnt = 0;
+	while(crt != start_node){
 		read = read_file_position(PARENT_BIN, crt);
 		 
-		update_file_vector(PATH_BIN, node, crt);
-	
+		update_file_vector(PATH_BIN, nodes_cnt, crt);
+		
 		crt = read;
-		node++;
+		nodes_cnt++;
 	}
-	update_file_vector(PATH_BIN, node, crt);
+	update_file_vector(PATH_BIN, nodes_cnt, crt);
 	
 	
 	int x, y, prev_x, prev_y, steps = 0;
@@ -119,12 +118,12 @@ void reconstruct_path(int start, int end, point_t true_size){
 	FILE* f = fopen("path.txt", "w");
 	
 	/* zapisanie sciezki w postaci krokow do pliku path.txt */
-	crt = read_file_position(PATH_BIN, node);
+	crt = read_file_position(PATH_BIN, nodes_cnt);
 	prev_x = crt % true_size.x;
 	prev_y = crt / true_size.x;
-	node--;
-	while(node >= 0){
-		crt = read_file_position(PATH_BIN, node);
+	nodes_cnt--;
+	while(nodes_cnt >= 0){
+		crt = read_file_position(PATH_BIN, nodes_cnt);
 		
 		/* obliczenie koordynatow danego wierzcholka */
 		x = crt % true_size.x; 
@@ -155,7 +154,7 @@ void reconstruct_path(int start, int end, point_t true_size){
 		prev_x = x;
 		prev_y = y;
 
-		node--;
+		nodes_cnt--;
 	}
 	/* wypisanie ostatniej prostej */
 	fprintf(f, "FORWARD %d\n", steps);
