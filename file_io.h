@@ -2,6 +2,11 @@
 #define IH
 #include "data.h"
 
+void path_to_txt(int, int, point_t);
+
+void path_to_binary(int, int, point_t);
+
+void compress_lab_to_binary(char*, point_t, point_t, point_t);
 
 void init_file_vector(char*, int, int);
 

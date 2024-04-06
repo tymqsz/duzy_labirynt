@@ -13,10 +13,6 @@ void reload_parent(int**, int*, int*, int, int, int);
 /* funkcja wczytujaca odpowiednia czesc wektora graph */
 void reload_graph(int**, int*, int*, int, int, int);
 
-/* funkcja wypisujaca znaleziona sciezke na podst. pliku PATH_BIN */
-void reconstruct_path(int start, int end, point_t true_size);
-
-
 /* funkcja przechodzaca po labiryntcie dzialajaca na zasadzie bfs */
 void traverse(int start_node, int end_node, point_t true_size){
 	int n_nodes = true_size.x*true_size.y;
@@ -71,95 +67,8 @@ void traverse(int start_node, int end_node, point_t true_size){
 
 	free(graph);
 	free(parent);
-
-	reconstruct_path(start_node, end_node, true_size);
 }
 
-/* funkcja przyporzadkowujaca ideks do wektora kierunku:
-   wektor [-1, 0] (lewo) -> indeks 0,
-   wektor [0, -1] (gora) -> indeks 1,
-   ...
-*/
-int get_dir_index(point_t dir){
-	if(dir.x == -1)
-		return 0;
-	if(dir.x == 1)
-		return 2;
-	if(dir.y == -1)
-		return 1;
-	if(dir.y == 1)
-		return 3;
-}
-
-/* funkcja zapisujaca znaleziona sciezke do pliku */
-void reconstruct_path(int start_node, int end_node, point_t true_size){
-	int crt = end_node;
-	int read;
-	 
-	init_file_vector(PATH_BIN, true_size.x*true_size.y, -1); /* inicjalizacja pliku binarnego
-																do przechowywania sciazki */
-	/* przepisanie sciezki do pliku binarnego */
-	int nodes_cnt = 0;
-	while(crt != start_node){
-		read = read_file_position(PARENT_BIN, crt);
-		 
-		update_file_vector(PATH_BIN, nodes_cnt, crt);
-		
-		crt = read;
-		nodes_cnt++;
-	}
-	update_file_vector(PATH_BIN, nodes_cnt, crt);
-	
-	
-	int x, y, prev_x, prev_y, steps = 0;
-	point_t dir;
-	int dir_index, prev_dir_index = -1;
-	char turn[20];
-	FILE* f = fopen("path.txt", "w");
-	
-	/* zapisanie sciezki w postaci krokow do pliku path.txt */
-	crt = read_file_position(PATH_BIN, nodes_cnt);
-	prev_x = crt % true_size.x;
-	prev_y = crt / true_size.x;
-	nodes_cnt--;
-	while(nodes_cnt >= 0){
-		crt = read_file_position(PATH_BIN, nodes_cnt);
-		
-		/* obliczenie koordynatow danego wierzcholka */
-		x = crt % true_size.x; 
-		y = crt / true_size.x;
-		
-		/* obliczenie wektora przesuniecia na podst.
-		   pozycji aktualnej i poprzedniej */
-		dir.x = x - prev_x;
-		dir.y = y - prev_y;
-		
-		dir_index = get_dir_index(dir); /* sprawdzenie indeksu wektora przesuniecia */
-		
-		/* jesli kierunek ten sam co poprzednio, zwiekszenie liczby krokow */
-		if(prev_dir_index == -1 || prev_dir_index == dir_index)
-			steps++;
-		else{
-			/* w przeciwnym wypadku sprawdzenie kierunku skretu i wypisanie liczby krokow */
-			if(dir_index - prev_dir_index == 1 || dir_index - prev_dir_index == -3)
-				strcpy(turn, "TURNRIGHT");
-			else
-				strcpy(turn, "TURNLEFT");
-			
-			fprintf(f, "FORWARD %d\n%s\n", steps, turn);
-			steps = 1;
-		}
-
-		prev_dir_index = dir_index;
-		prev_x = x;
-		prev_y = y;
-
-		nodes_cnt--;
-	}
-	/* wypisanie ostatniej prostej */
-	fprintf(f, "FORWARD %d\n", steps);
-	fclose(f);
-}
 
 void reload_parent(int** parent, int* min_parent, int* max_parent, int crt, int n_nodes, int HELD_PARENTS){
 		if(crt < *min_parent || crt >= *max_parent){

@@ -19,7 +19,8 @@ int main(int argc, char** argv){
 		exit(EXIT_FAILURE);
 	}
 	
-	int verbose = argc > 2 ? atoi(argv[2]) : 0;
+	int binary_output = argc > 2 ? atoi(argv[2]): 0;
+	int verbose = argc > 3 ? atoi(argv[3]) : 0;
 	
 	/* obsluga binarnego/tekstowego pliku wejsciowego */
 	point_t lab_size, start, end;
@@ -49,6 +50,16 @@ int main(int argc, char** argv){
 	/* przejscie po labiryncie i zapisanie sciezki */
 	traverse(start_node, end_node, true_size);
 	
+	
+	/* wypisanie rozwiazania */
+	if(binary_output){
+		compress_lab_to_binary(input_filename, lab_size, start, end);
+		path_to_binary(start_node, end_node, lab_size);
+	}
+	else{
+		path_to_txt(start_node, end_node, lab_size);
+	}
+
 	/* usuniecie plikow tymczasowych */
 	delete_temp_files(TEMP_BIN_FILES, 4);
 	if(verbose)
