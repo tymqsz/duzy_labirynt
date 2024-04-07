@@ -3,3 +3,6 @@ main
 *.py
 *.bin
 !todo.txt
+input/
+output/
+.vscode/

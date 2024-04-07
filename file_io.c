@@ -44,15 +44,19 @@ int reverse_path(int start_node, int end_node, point_t true_size){
 }
 
 /* funkcja zapisujaca znaleziona sciezke do pliku */
-void path_to_txt(int start_node, int end_node, point_t true_size, int start_left){
+void path_to_txt(char* output_filename, int start_node, int end_node, point_t true_size, int start_left){
 	int node_cnt = reverse_path(start_node, end_node, true_size);	
 	
+	FILE* output;
+	if(strstr(output_filename, "stdout") == NULL)
+		output = fopen(output_filename, "ab");
+	else
+		output = stdout;
 
 	int x, y, prev_x, prev_y, steps = 0;
 	point_t dir;
 	int dir_index, prev_dir_index;
 	char turn[20];
-	FILE* f = fopen("path.txt", "w");
 	
 	/* zapisanie sciezki w postaci krokow do pliku path.txt */
 	int crt = read_file_position(PATH_BIN, node_cnt);
@@ -88,9 +92,9 @@ void path_to_txt(int start_node, int end_node, point_t true_size, int start_left
 				strcpy(turn, "TURNLEFT");
 			
 			if(steps > 0)
-				fprintf(f, "FORWARD %d\n%s\n", steps, turn);
+				fprintf(output, "FORWARD %d\n%s\n", steps, turn);
 			else
-				fprintf(f,"%s\n", turn);
+				fprintf(output,"%s\n", turn);
 
 			steps = 1;
 		}
@@ -102,17 +106,21 @@ void path_to_txt(int start_node, int end_node, point_t true_size, int start_left
 		node_cnt--;
 	}
 	/* wypisanie ostatniej prostej */
-	fprintf(f, "FORWARD %d\n", steps);
-	fclose(f);
+	fprintf(output, "FORWARD %d\n", steps);
+	fclose(output);
 }
 
-void path_to_binary(int start_node, int end_node, point_t true_size){
+void path_to_binary(char* output_filename, int start_node, int end_node, point_t true_size){
 	int node_cnt = reverse_path(start_node, end_node, true_size);	
 	
 	int x, y, prev_x, prev_y;
 	point_t dir;
 	int dir_index, prev_dir_index = -1;
-	FILE* f = fopen("solved_maze.bin", "ab");
+	FILE* output;
+	if(strstr(output_filename, "stdout") == NULL)
+		output = fopen(output_filename, "ab");
+	else
+		output = stdout;
 	
 	/* zliczenie liczby krokow */
 	unsigned short int step_cnt = 0;
@@ -145,8 +153,8 @@ void path_to_binary(int start_node, int end_node, point_t true_size){
 	
 	/* naglowek rozwiazania */
 	unsigned int id_rozw = 0x52524243;
-	fwrite(&id_rozw, 4, 4, f);
-	fwrite(&step_cnt, 2, 2, f); /* 2 bajty zamiast 1 */
+	fwrite(&id_rozw, 4, 4, output);
+	fwrite(&step_cnt, 2, 2, output); /* 2 bajty zamiast 1 */
 	
 	
 	char char_dir;
@@ -187,8 +195,8 @@ void path_to_binary(int start_node, int end_node, point_t true_size){
 			}
 			
 			/* zapisanie kroku */
-			fwrite(&char_dir, 1, 1, f);
-			fwrite(&step, 1, 1, f);
+			fwrite(&char_dir, 1, 1, output);
+			fwrite(&step, 1, 1, output);
 
 			step = 1;
 		}
@@ -216,14 +224,18 @@ void path_to_binary(int start_node, int end_node, point_t true_size){
 	}
 
 	/*ostatnia prosta*/
-	fwrite(&char_dir, 1, 1, f);
-	fwrite(&step, 1, 1, f);
-	fclose(f);
+	fwrite(&char_dir, 1, 1, output);
+	fwrite(&step, 1, 1, output);
+	fclose(output);
 }
 
-void compress_lab_to_binary(char* input_filename, point_t lab_size, point_t start, point_t end){
+void compress_lab_to_binary(char* input_filename, char* output_filename, point_t lab_size, point_t start, point_t end){
 	FILE* in = fopen(input_filename, "r");
-	FILE* out = fopen("solved_maze.bin", "ab");
+	FILE* output;
+	if(strstr(output_filename, "stdout") == NULL)
+		output = fopen(output_filename, "ab");
+	else
+		output = stdout;
 	
 	/* znalezienie liczby slow kodowych */
 	int slowa_kodowe_cnt = 0;
@@ -253,16 +265,16 @@ void compress_lab_to_binary(char* input_filename, point_t lab_size, point_t star
 	int solution_offset = 0;
 	char sep = '*', wall = 'X', path = ' ';
 
-	fwrite(&file_id, 4, 4, out);
-	fwrite(&esc, 1, 1, out);
-	fwrite(&reserved, 4, 4, out);
-	fwrite(&reserved, 4, 4, out);
-	fwrite(&reserved, 4, 4, out);
-	fwrite(&slowa_kodowe_cnt, 4, 4, out);
-	fwrite(&solution_offset, 4, 4, out);
-	fwrite(&sep, 1, 1, out);
-	fwrite(&wall, 1, 1, out);
-	fwrite(&path, 1, 1, out);
+	fwrite(&file_id, 4, 4, output);
+	fwrite(&esc, 1, 1, output);
+	fwrite(&reserved, 4, 4, output);
+	fwrite(&reserved, 4, 4, output);
+	fwrite(&reserved, 4, 4, output);
+	fwrite(&slowa_kodowe_cnt, 4, 4, output);
+	fwrite(&solution_offset, 4, 4, output);
+	fwrite(&sep, 1, 1, output);
+	fwrite(&wall, 1, 1, output);
+	fwrite(&path, 1, 1, output);
 
 
 	
@@ -278,9 +290,9 @@ void compress_lab_to_binary(char* input_filename, point_t lab_size, point_t star
 		
 		if((prev_c != '.' && prev_c != c) || reps == 255){
 			/*wypisanie slowa kodowego */
-			fwrite(&sep, 1, 1, out);
-			fwrite(&prev_c, 1, 1, out);
-			fwrite(&reps, 1, 1, out);
+			fwrite(&sep, 1, 1, output);
+			fwrite(&prev_c, 1, 1, output);
+			fwrite(&reps, 1, 1, output);
 
 			reps = 0;
 		}
@@ -290,5 +302,5 @@ void compress_lab_to_binary(char* input_filename, point_t lab_size, point_t star
 	}
 
 	fclose(in);
-	fclose(out);
+	fclose(output);
 }
