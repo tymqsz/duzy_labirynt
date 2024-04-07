@@ -4,6 +4,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include "data.h"
 #include "bfs.h"
@@ -15,6 +16,30 @@
 char* TEMP_BIN_FILES[] = {QUEUE_BIN, GRAPH_BIN, PARENT_BIN, PATH_BIN}; /* sciezki do plikow tymczasowych */
 
 int main(int argc, char** argv){
+    char* input_filename = NULL;
+    char* output_filename = "stdout";
+    int verbose = 0;
+
+    /* uzycie getopt do wczytania argumentow */ 
+    int opt;
+    while ((opt = getopt(argc, argv, "i:o:v")) != -1) {
+        switch (opt) {
+            case 'i':
+                input_filename = optarg;
+                break;
+            case 'o':
+                output_filename = optarg;
+                break;
+            case 'v':
+                verbose = 1;
+                break;
+            default: /* '?' */
+                fprintf(stderr, "Uzycie: %s -i [pliku wejsciowy] -o [plik wyjsciowy]"
+				                " -v [0/1(wypisywanie komunikatow)]\nwymagany argument: -i\n", argv[0]);
+				return -1;
+		}
+    }
+
 	/* upewnienie sie ze foldery input/output istnieja */
     DIR *input_dir = opendir("input");
 	DIR *output_dir = opendir("output");
@@ -24,34 +49,26 @@ int main(int argc, char** argv){
 	}
 	if(!output_dir)
 		mkdir("output", 0777);
-
-	/* wczytanie nazw pliku wejsciowego i wyjsciowego*/
-	char* input_filename;
-	if(argc > 1)
-		input_filename = argv[1];
-	else{
+	
+	/* sprawdzenie czy podano plik wejsciowy */
+	char input[30];
+	if(input_filename == NULL){
 		printf("nie podano pliku wejsciowego\n");
 		return 17;
 	}
-
-	char input[30];
 	strcpy(input, "input/");
 	strcat(input, input_filename);
-
-	char output_filename[30];
+	
+	char output[30];
 	int binary_output = 0;
-	if(argc > 2){
-		strcpy(output_filename, "output/");
-		strcat(output_filename, argv[2]);
+	if(strstr(output_filename, "stdout") == NULL){
+		strcpy(output, "output/");
+		strcat(output, output_filename);
 
-		if(strstr(argv[2], ".bin") != NULL)
+		if(strstr(output_filename, ".bin") != NULL)
 			binary_output = 1;
 	}
-	else
-		strcpy(output_filename, "stdout");
-	
-	int verbose = argc > 3 ? atoi(argv[3]) : 0;
-	
+
 
 	/* obsluga binarnego/tekstowego pliku wejsciowego */
 	point_t lab_size, start, end;
@@ -104,11 +121,11 @@ int main(int argc, char** argv){
 	/* wypisanie rozwiazania */
 	int output_status;
 	if(binary_output){
-		output_status = compress_lab_to_binary(input, output_filename, lab_size, start, end);
-		path_to_binary(output_filename, start_node, end_node, true_size);
+		output_status = compress_lab_to_binary(input, output, lab_size, start, end);
+		path_to_binary(output, start_node, end_node, true_size);
 	}
 	else{
-		output_status = path_to_txt(output_filename, start_node, end_node, true_size, start_left);
+		output_status = path_to_txt(output, start_node, end_node, true_size, start_left);
 	}
 	if(output_status == 1){
 		printf("nie moge utworzyc pliku wyjsciowego\n");
