@@ -2,7 +2,7 @@
 #define IH
 #include "data.h"
 
-void path_to_txt(int, int, point_t);
+void path_to_txt(int, int, point_t, int);
 
 void path_to_binary(int, int, point_t);
 

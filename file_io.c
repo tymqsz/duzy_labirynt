@@ -128,13 +128,13 @@ int reverse_path(int start_node, int end_node, point_t true_size){
 }
 
 /* funkcja zapisujaca znaleziona sciezke do pliku */
-void path_to_txt(int start_node, int end_node, point_t true_size){
+void path_to_txt(int start_node, int end_node, point_t true_size, int start_left){
 	int node_cnt = reverse_path(start_node, end_node, true_size);	
 	
 
 	int x, y, prev_x, prev_y, steps = 0;
 	point_t dir;
-	int dir_index, prev_dir_index = -1;
+	int dir_index, prev_dir_index;
 	char turn[20];
 	FILE* f = fopen("path.txt", "w");
 	
@@ -143,9 +143,13 @@ void path_to_txt(int start_node, int end_node, point_t true_size){
 	prev_x = crt % true_size.x;
 	prev_y = crt / true_size.x;
 	node_cnt--;
+
+	if(start_left)
+		prev_dir_index = 2;
+	else
+		prev_dir_index = 3;
 	while(node_cnt >= 0){
 		crt = read_file_position(PATH_BIN, node_cnt);
-		
 		/* obliczenie koordynatow danego wierzcholka */
 		x = crt % true_size.x; 
 		y = crt / true_size.x;
@@ -158,7 +162,7 @@ void path_to_txt(int start_node, int end_node, point_t true_size){
 		dir_index = get_dir_index(dir); /* sprawdzenie indeksu wektora przesuniecia */
 		
 		/* jesli kierunek ten sam co poprzednio, zwiekszenie liczby krokow */
-		if(prev_dir_index == -1 || prev_dir_index == dir_index)
+		if(prev_dir_index == dir_index)
 			steps++;
 		else{
 			/* w przeciwnym wypadku sprawdzenie kierunku skretu i wypisanie liczby krokow */
@@ -167,7 +171,11 @@ void path_to_txt(int start_node, int end_node, point_t true_size){
 			else
 				strcpy(turn, "TURNLEFT");
 			
-			fprintf(f, "FORWARD %d\n%s\n", steps, turn);
+			if(steps > 0)
+				fprintf(f, "FORWARD %d\n%s\n", steps, turn);
+			else
+				fprintf(f,"%s\n", turn);
+
 			steps = 1;
 		}
 
@@ -224,8 +232,12 @@ void path_to_binary(int start_node, int end_node, point_t true_size){
 	fwrite(&id_rozw, 4, 4, f);
 	fwrite(&step_cnt, 2, 2, f); /* 2 bajty zamiast 1 */
 	
-	/* wypisanie kolejnych krokow rozwiazania */
+	
+	char char_dir;
 	unsigned char step = 0;
+	prev_dir_index = -1;
+
+	/* wypisanie kolejnych krokow rozwiazania */
 	node = node_cnt;
 	crt = read_file_position(PATH_BIN, node_cnt);
 	prev_x = crt % true_size.x;
@@ -243,27 +255,26 @@ void path_to_binary(int start_node, int end_node, point_t true_size){
 		dir_index = get_dir_index(dir);
 		
 		if(prev_dir_index != dir_index && prev_dir_index != -1){
-			char WENS;
 			switch(prev_dir_index){
-			    case -1:
-					WENS = 'W';
-					break;
-				case 0:
-					WENS = 'N';
+			    case 0:
+					char_dir = 'W';
 					break;
 				case 1:
-					WENS = 'E';
+					char_dir = 'N';
 					break;
 				case 2:
-					WENS = 'S';
+					char_dir = 'E';
+					break;
+				case 3:
+					char_dir = 'S';
 					break;
 			}
 			
 			/* zapisanie kroku */
-			fwrite(&WENS, 1, 1, f);
+			fwrite(&char_dir, 1, 1, f);
 			fwrite(&step, 1, 1, f);
 
-			step = 0;
+			step = 1;
 		}
 		else
 			step++;
@@ -273,7 +284,24 @@ void path_to_binary(int start_node, int end_node, point_t true_size){
 		prev_y = y;
 		node--;
 	}
+	switch(prev_dir_index){
+		case 0:
+			char_dir = 'W';
+			break;
+		case 1:
+			char_dir = 'N';
+			break;
+		case 2:
+			char_dir = 'E';
+			break;
+		case 3:
+			char_dir = 'S';
+			break;
+	}
 
+	/*ostatnia prosta*/
+	fwrite(&char_dir, 1, 1, f);
+	fwrite(&step, 1, 1, f);
 	fclose(f);
 }
 

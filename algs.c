@@ -38,9 +38,11 @@ void traverse(int start_node, int end_node, point_t true_size){
 	int* graph = read_file_vector(GRAPH_BIN, node*4, 4*HELD_NODES); /* wczytanie pierwszej czesc wektora graph */
 	while(queue->internal_size > 0){
 		node = pop(queue); /* zdjecie pierwszego wierzcholka z kolejki */
-		if(node == end_node){
-			printf("sciezka znaleziona\n");
-			break;
+
+		if(node == end_node){ /*sciezka znaleziona*/
+			free(graph);
+			free(parent);
+			return;
 		}
 
 		reload_graph(&graph, &min_node, &max_node, node, n_nodes, HELD_NODES); /* wczytaj odpowiednia czesc graph */
@@ -67,6 +69,8 @@ void traverse(int start_node, int end_node, point_t true_size){
 
 	free(graph);
 	free(parent);
+
+	exit(EXIT_FAILURE); /*brak sciezki*/
 }
 
 

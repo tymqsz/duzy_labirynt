@@ -1,5 +1,4 @@
 3. kody bledow
 4. getopt
 5. zmiana kolejki na zwykla
-6. poprawa wypisywania krokow do txt
 7. zmiana nazw plikow (algs) + rozbicie file_io

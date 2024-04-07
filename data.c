@@ -82,7 +82,7 @@ void graph_to_bin_file(char* input_file, point_t size){
 
 /* funkcja znajdujaca liczbe kolumn i wierszy
    ktore reprezentuja labirynt w pliku .txt */
-void lab_info_txt(char* filename, point_t* lab_size, point_t* start, point_t* end){
+void lab_info_txt(char* filename, point_t* lab_size, point_t* start, point_t* end, int* start_left){
 	FILE* f = fopen(filename, "r");
 	if(f == NULL){
 		fprintf(stderr, "Nie moge czytac pliku %s\n", filename);
@@ -98,7 +98,7 @@ void lab_info_txt(char* filename, point_t* lab_size, point_t* start, point_t* en
 			lab_size->x = x;
 			row_len_found = 1;
 		}
-		else if(c == '\n'){
+		if(c == '\n'){
 			y += 1;
 		}
 		x += 1;
@@ -110,6 +110,10 @@ void lab_info_txt(char* filename, point_t* lab_size, point_t* start, point_t* en
 	fseek(f, 0, SEEK_SET);
 	while((c = fgetc(f)) != EOF){
 		if((x == 0 || y == 0) && c == 'P'){
+			if(x==0)
+				*start_left = 1;
+			else
+				*start_left = 0;
 			start->x = x;
 			start->y = y;
 		}
