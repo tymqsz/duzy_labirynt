@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "queue.h"
+#include "file_vector.h"
 #include "file_io.h"
 
 #define QUEUE "queue.bin"

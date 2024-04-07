@@ -2,6 +2,7 @@
 #include<stdio.h>
 
 #include "data.h"
+#include "file_vector.h"
 #include "file_io.h"
 #include "metadata.h"
 

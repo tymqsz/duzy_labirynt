@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "data.h"
+#include "file_vector.h"
 #include "file_io.h"
 #include "queue.h"
 #include "metadata.h"

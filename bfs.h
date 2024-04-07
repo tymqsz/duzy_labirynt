@@ -1,5 +1,5 @@
-#ifndef AH
-#define AH
+#ifndef BFSH
+#define BFSH
 
 #include "data.h"
 

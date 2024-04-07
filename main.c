@@ -3,7 +3,8 @@
 #include<string.h>
 
 #include "data.h"
-#include "algs.h"
+#include "bfs.h"
+#include "file_vector.h"
 #include "file_io.h"
 #include "queue.h"
 #include "metadata.h"
