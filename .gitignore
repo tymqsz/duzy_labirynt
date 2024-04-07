@@ -1,8 +1,4 @@
-*.txt
 main
-*.py
-*.bin
-!todo.txt
-input/
-output/
+input/*
+output/*
 .vscode/
