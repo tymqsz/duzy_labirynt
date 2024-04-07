@@ -44,7 +44,7 @@ int reverse_path(int start_node, int end_node, point_t true_size){
 }
 
 /* funkcja zapisujaca znaleziona sciezke do pliku */
-void path_to_txt(char* output_filename, int start_node, int end_node, point_t true_size, int start_left){
+int path_to_txt(char* output_filename, int start_node, int end_node, point_t true_size, int start_left){
 	int node_cnt = reverse_path(start_node, end_node, true_size);	
 	
 	FILE* output;
@@ -52,6 +52,8 @@ void path_to_txt(char* output_filename, int start_node, int end_node, point_t tr
 		output = fopen(output_filename, "ab");
 	else
 		output = stdout;
+	if(output == NULL)
+		return 1;
 
 	int x, y, prev_x, prev_y, steps = 0;
 	point_t dir;
@@ -108,6 +110,8 @@ void path_to_txt(char* output_filename, int start_node, int end_node, point_t tr
 	/* wypisanie ostatniej prostej */
 	fprintf(output, "FORWARD %d\n", steps);
 	fclose(output);
+
+	return 0;
 }
 
 void path_to_binary(char* output_filename, int start_node, int end_node, point_t true_size){
@@ -229,14 +233,16 @@ void path_to_binary(char* output_filename, int start_node, int end_node, point_t
 	fclose(output);
 }
 
-void compress_lab_to_binary(char* input_filename, char* output_filename, point_t lab_size, point_t start, point_t end){
+int compress_lab_to_binary(char* input_filename, char* output_filename, point_t lab_size, point_t start, point_t end){
 	FILE* in = fopen(input_filename, "r");
 	FILE* output;
 	if(strstr(output_filename, "stdout") == NULL)
 		output = fopen(output_filename, "ab");
 	else
 		output = stdout;
-	
+	if(output == NULL)
+		return 1;
+
 	/* znalezienie liczby slow kodowych */
 	int slowa_kodowe_cnt = 0;
 	int i = 0;
@@ -303,4 +309,6 @@ void compress_lab_to_binary(char* input_filename, char* output_filename, point_t
 
 	fclose(in);
 	fclose(output);
+
+	return 0;
 }

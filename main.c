@@ -56,15 +56,25 @@ int main(int argc, char** argv){
 	/* obsluga binarnego/tekstowego pliku wejsciowego */
 	point_t lab_size, start, end;
 	int start_left; /* zmienna przechowujaca info o kierunku wejscia do labiryntu*/
+	int input_status;
 	if(strstr(input_filename, ".bin") != NULL){
-		lab_info_binary(input, &lab_size, &start, &end);
+		input_status = lab_info_binary(input, &lab_size, &start, &end);
 
 		binary_to_txt(input, "lab.txt", lab_size);
 		strcpy(input, "lab.txt");
 	}
 	else{
-		lab_info_txt(input, &lab_size, &start, &end, &start_left);
+		input_status = lab_info_txt(input, &lab_size, &start, &end, &start_left);
 	}
+	if(input_status == 1){
+		printf("nie moge otworzyc pliku wejsciowego\n");
+		return 2137;
+	}
+	else if(input_status == 2){
+		printf("niepoprawny format pliku wejsciowego\n");
+		return 19;
+	}
+	
 	int start_node = coords_to_node(start, lab_size);
 	int end_node = coords_to_node(end, lab_size);
 	point_t true_size = {(lab_size.x-1)/2, (lab_size.y-1)/2};
@@ -81,18 +91,28 @@ int main(int argc, char** argv){
 	
 
 	/* przejscie po labiryncie i zapisanie sciezki */
-	traverse(start_node, end_node, true_size);
+	int no_path;
+	no_path = traverse(start_node, end_node, true_size);
+	if(no_path){
+		printf("brak sciezki w labiryncie\n");
+		return 11;
+	}
 	if(verbose)
 		printf("sciezka znaleziona\n");
 
 
 	/* wypisanie rozwiazania */
+	int output_status;
 	if(binary_output){
-		compress_lab_to_binary(input, output_filename, lab_size, start, end);
+		output_status = compress_lab_to_binary(input, output_filename, lab_size, start, end);
 		path_to_binary(output_filename, start_node, end_node, true_size);
 	}
 	else{
-		path_to_txt(output_filename, start_node, end_node, true_size, start_left);
+		output_status = path_to_txt(output_filename, start_node, end_node, true_size, start_left);
+	}
+	if(output_status == 1){
+		printf("nie moge utworzyc pliku wyjsciowego\n");
+		return 69;
 	}
 
 

@@ -5,6 +5,6 @@
 
 #define MAX_SIZE 100
 
-void traverse(int, int, point_t);
+int traverse(int, int, point_t);
 
 #endif

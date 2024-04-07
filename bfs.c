@@ -15,7 +15,7 @@ void reload_parent(int**, int*, int*, int, int, int);
 void reload_graph(int**, int*, int*, int, int, int);
 
 /* funkcja przechodzaca po labiryntcie dzialajaca na zasadzie bfs */
-void traverse(int start_node, int end_node, point_t true_size){
+int traverse(int start_node, int end_node, point_t true_size){
 	int n_nodes = true_size.x*true_size.y;
 	int HELD_PARENTS = 60000; /* liczba trzymanych indeksow wektora parent w jednym czasie */
 	int HELD_NODES = 60000; /* liczba trzymanych indeksow wektora graph w jednym czasie */
@@ -43,7 +43,7 @@ void traverse(int start_node, int end_node, point_t true_size){
 		if(node == end_node){ /*sciezka znaleziona*/
 			free(graph);
 			free(parent);
-			return;
+			return 0;
 		}
 
 		reload_graph(&graph, &min_node, &max_node, node, n_nodes, HELD_NODES); /* wczytaj odpowiednia czesc graph */
@@ -71,7 +71,7 @@ void traverse(int start_node, int end_node, point_t true_size){
 	free(graph);
 	free(parent);
 
-	exit(EXIT_FAILURE); /*brak sciezki*/
+	return 1; /*brak sciezki*/
 }
 
 

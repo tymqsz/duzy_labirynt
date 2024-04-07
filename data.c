@@ -83,11 +83,11 @@ void graph_to_bin_file(char* input_file, point_t size){
 
 /* funkcja znajdujaca liczbe kolumn i wierszy
    ktore reprezentuja labirynt w pliku .txt */
-void lab_info_txt(char* filename, point_t* lab_size, point_t* start, point_t* end, int* start_left){
+int lab_info_txt(char* filename, point_t* lab_size, point_t* start, point_t* end, int* start_left){
 	FILE* f = fopen(filename, "r");
 	if(f == NULL){
 		fprintf(stderr, "Nie moge czytac pliku %s\n", filename);
-		exit(1);
+		return 1;
 	}
 	
 	/* znalezienie rozmiaru pliku */
@@ -95,6 +95,9 @@ void lab_info_txt(char* filename, point_t* lab_size, point_t* start, point_t* en
 	int x = 0, y = 0;
 	int row_len_found = 0;
 	while((c = fgetc(f)) != EOF){
+		if(c != '\n' && c != 'X' && c != ' ' && c != 'P' && c != 'K')
+			return 2; /*niepoprawny znak*/
+
 		if(c == '\n' && !row_len_found){
 			lab_size->x = x;
 			row_len_found = 1;
@@ -131,6 +134,8 @@ void lab_info_txt(char* filename, point_t* lab_size, point_t* start, point_t* en
 	}
 	
 	fclose(f);
+
+	return 0;
 }
 
 int coords_to_node(point_t coords, point_t lab_size){
@@ -150,11 +155,11 @@ int coords_to_node(point_t coords, point_t lab_size){
 	return node;
 }
 
-void lab_info_binary(char* filename, point_t* size, point_t* start, point_t* end) {
+int lab_info_binary(char* filename, point_t* size, point_t* start, point_t* end) {
     FILE* f = fopen(filename, "rb");
     if (f == NULL) {
         printf("Nie moge czytac pliku %s\n", filename);
-        exit(1);
+        return 1;
     }
 
     fseek(f, 5, SEEK_SET);
@@ -178,6 +183,7 @@ void lab_info_binary(char* filename, point_t* size, point_t* start, point_t* end
 	end->y = exit_y-1;
 
     fclose(f);
+	return 0;
 }
 
 int max(int a, int b){

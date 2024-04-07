@@ -7,9 +7,9 @@ typedef struct{
 } point_t;
 
 
-void lab_info_txt(char*, point_t*, point_t*, point_t*, int*);
+int lab_info_txt(char*, point_t*, point_t*, point_t*, int*);
 
-void lab_info_binary(char*, point_t*, point_t*, point_t*);
+int lab_info_binary(char*, point_t*, point_t*, point_t*);
 
 int coords_to_node(point_t, point_t);
 
