@@ -68,6 +68,8 @@ int main(int argc, char** argv){
 		if(strstr(output_filename, ".bin") != NULL)
 			binary_output = 1;
 	}
+	else
+		strcpy(output, output_filename);
 
 
 	/* obsluga binarnego/tekstowego pliku wejsciowego */
