@@ -46,13 +46,13 @@ int traverse(int start_node, int end_node, point_t true_size){
 			return 0;
 		}
 
-		reload_graph(&graph, &min_node, &max_node, node, n_nodes, HELD_NODES); /* wczytaj odpowiednia czesc graph */
+		reload_graph(&graph, &min_node, &max_node, node, n_nodes, HELD_NODES); /* wczytanie odpowiednia czesci graph */
 		
-		/* sprawdzenie wszystkich sasiadow wierzcholka node,
+		/*sprawdzenie wszystkich sasiadow wierzcholka node,
 		   informacje o sasiadach wierzcholka n-tego znajduja sie w wektorze graph
-		   pod indeksami (n-min_node)*4+0...(n-min_node)*4+3 */
+		   pod indeksami (n-min_node)*4+0 (n-min_node)*4+1 (n-min_node)*4+2 (n-min_node)*4+3 */
 		for(int i = 0; i < 4; i++){
-			/* sprawdzenie czy sasiad != -1 (przejscie istnieje) */
+			/* sprawdzenie czy sasiad gdy ==-1 to przejscie nie istnieje */
 			if(graph[(node-min_node)*4+i] != -1){
 				next = graph[(node-min_node)*4+i];
 				
