@@ -81,6 +81,13 @@ int lab_info_binary(char* filename, point_t* size, point_t* start, point_t* end,
     fread(&exit_x, sizeof(short int), 1, f);
     fread(&exit_y, sizeof(short int), 1, f);
 
+    cols -= 1;
+    rows -= 1;
+    entry_x -= 1;
+    entry_y -= 1;
+    exit_x -= 1;
+    exit_y -= 1;
+
 
 	size->x = cols;
 	size->y = rows;
