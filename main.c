@@ -16,7 +16,7 @@
 char* TEMP_BIN_FILES[] = {QUEUE_BIN, GRAPH_BIN, PARENT_BIN, PATH_BIN}; /* sciezki do plikow tymczasowych */
 
 int main(int argc, char** argv){
-    char* input_filename = NULL;
+	char* input_filename = NULL;
     char* output_filename = "stdout";
     int verbose = 0;
 
@@ -39,7 +39,6 @@ int main(int argc, char** argv){
 				return -1;
 		}
     }
-
 	/* upewnienie sie ze foldery input/output istnieja */
     DIR *input_dir = opendir("input");
 	DIR *output_dir = opendir("output");
@@ -71,19 +70,19 @@ int main(int argc, char** argv){
 	else
 		strcpy(output, output_filename);
 
-
 	/* obsluga binarnego/tekstowego pliku wejsciowego */
 	point_t lab_size, start, end;
 	int start_left; /* zmienna przechowujaca info o kierunku wejscia do labiryntu*/
 	int input_status;
 	if(strstr(input_filename, ".bin") != NULL){
-		input_status = lab_info_binary(input, &lab_size, &start, &end);
-
+		input_status = lab_info_binary(input, &lab_size, &start, &end, &start_left);
+		
 		binary_to_txt(input, "lab.txt", lab_size);
 		strcpy(input, "lab.txt");
 	}
 	else{
 		input_status = lab_info_txt(input, &lab_size, &start, &end, &start_left);
+		
 	}
 	if(input_status == 1){
 		printf("nie moge otworzyc pliku wejsciowego\n");
@@ -114,6 +113,11 @@ int main(int argc, char** argv){
 	no_path = traverse(start_node, end_node, true_size);
 	if(no_path){
 		printf("brak sciezki w labiryncie\n");
+		if(strstr(input_filename, ".bin") != NULL)
+			remove("lab.txt");
+		delete_temp_files(TEMP_BIN_FILES, 4);
+		if(verbose)
+			printf("pliki tymczasowe usuniete\n");
 		return 11;
 	}
 	if(verbose)

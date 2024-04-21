@@ -17,8 +17,8 @@ void reload_graph(int**, int*, int*, int, int, int);
 /* funkcja przechodzaca po labiryntcie dzialajaca na zasadzie bfs */
 int traverse(int start_node, int end_node, point_t true_size){
 	int n_nodes = true_size.x*true_size.y;
-	int HELD_PARENTS = 60000; /* liczba trzymanych indeksow wektora parent w jednym czasie */
-	int HELD_NODES = 60000; /* liczba trzymanych indeksow wektora graph w jednym czasie */
+	int HELD_PARENTS = 1000; /* liczba trzymanych indeksow wektora parent w jednym czasie */
+	int HELD_NODES = 1000; /* liczba trzymanych indeksow wektora graph w jednym czasie */
 	if(n_nodes < start_node+HELD_PARENTS)
 		HELD_PARENTS = n_nodes-start_node; /* trzymaj maksymalnie wierzcholki od poczatkowego do ostatniego */
 	if(n_nodes < start_node+HELD_NODES)

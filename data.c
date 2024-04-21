@@ -16,19 +16,20 @@ void binary_to_txt(char* input, char* output, point_t lab_size){
 	int target = lab_size.x*lab_size.y;
 	
 
-	char g, val;
+	unsigned char g, val;
 	unsigned char cnt;
 	while(count < target){
 		fread(&g, 1, 1, in);
 		fread(&val, 1, 1, in);
 		fread(&cnt, 1, 1, in);
 		
-		count += (cnt+1);
-
-		for(int i = 0; i < cnt+1; i++)
+		for(int i = 0; i < cnt+1; i++){
+			if((count+i) % lab_size.x == 0 && count+i != 0){
+				fprintf(out, "\n");
+			}
 			fprintf(out, "%c", val);
-		if( count % lab_size.x == 0)
-			fprintf(out, "\n");
+		}
+		count += (cnt+1);
 	}
 	
 	fclose(in);

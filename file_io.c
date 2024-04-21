@@ -27,12 +27,13 @@ int lab_info_txt(char* filename, point_t* lab_size, point_t* start, point_t* end
 			lab_size->x = x;
 			row_len_found = 1;
 		}
+		x += 1;
 		if(c == '\n'){
 			y += 1;
+			x=0;
 		}
-		x += 1;
 	}
-	lab_size->y = y+1;
+	lab_size->y = y;	
 	
 	/* znalezienie wejscia i wyjscia */
 	x = 0, y = 0;
@@ -63,7 +64,7 @@ int lab_info_txt(char* filename, point_t* lab_size, point_t* start, point_t* end
 	return 0;
 }
 
-int lab_info_binary(char* filename, point_t* size, point_t* start, point_t* end) {
+int lab_info_binary(char* filename, point_t* size, point_t* start, point_t* end, int* start_left) {
     FILE* f = fopen(filename, "rb");
     if (f == NULL) {
         printf("Nie moge czytac pliku %s\n", filename);
@@ -84,11 +85,15 @@ int lab_info_binary(char* filename, point_t* size, point_t* start, point_t* end)
 	size->x = cols;
 	size->y = rows;
 	
-	start->x = entry_x-1;
-	start->y = entry_y-1;
+	//TODO: nie dziala dla slabego ichniejszego formatu UWU
+	start->x = entry_x;
+	start->y = entry_y;
 
-	end->x = exit_x-1;
-	end->y = exit_y-1;
+	if(entry_x == 0)
+		*start_left = 1;
+	
+	end->x = exit_x;
+	end->y = exit_y;
 
     fclose(f);
 	return 0;
@@ -106,11 +111,11 @@ int compress_lab_to_binary(char* input_filename, char* output_filename, point_t 
 		return 1;
 
 	/* znalezienie liczby slow kodowych */
-	int slowa_kodowe_cnt = 0;
-	int i = 0;
+	unsigned int slowa_kodowe_cnt = 0;
+	unsigned int i = 0;
 	unsigned char reps = 0;
-	char prev_c = '.';
-	char c;
+	unsigned char prev_c = '.';
+	unsigned char c;
 	while(i < lab_size.x*lab_size.y){
 		c = fgetc(in);
 		
@@ -121,31 +126,37 @@ int compress_lab_to_binary(char* input_filename, char* output_filename, point_t 
 			slowa_kodowe_cnt++;
 			reps = 0;
 		}
-		else if(prev_c == '.' || prev_c == c)
+		else if(prev_c == c)
 			reps++;
 		i++;
+		prev_c = c;
 	}
 	
 	/* wypisanie naglowka */
 	unsigned int file_id = 0x52524243;
-	char esc = 0x1B;
-	int reserved = 0;
-	int solution_offset = 0;
-	char sep = '*', wall = 'X', path = ' ';
-
-	fwrite(&file_id, 4, 4, output);
+	unsigned char esc = 0x1B;
+	unsigned int reserved = 0;
+	unsigned int solution_offset = 1;
+	unsigned char sep = '*', wall = 'X', path = ' ';
+	
+	fwrite(&file_id, 4, 1, output);
 	fwrite(&esc, 1, 1, output);
-	fwrite(&reserved, 4, 4, output);
-	fwrite(&reserved, 4, 4, output);
-	fwrite(&reserved, 4, 4, output);
-	fwrite(&slowa_kodowe_cnt, 4, 4, output);
-	fwrite(&solution_offset, 4, 4, output);
+	fwrite((short int *)&lab_size.x, sizeof(short int), 1, output);
+	fwrite((short int*)&lab_size.y, sizeof(short int), 1, output);
+	fwrite((short int*)&start.x, sizeof(short int), 1, output);
+	fwrite((short int*)&start.y, sizeof(short int), 1, output);
+	fwrite((short int*)&end.x, sizeof(short int), 1, output);
+	fwrite((short int*)&end.y, sizeof(short int), 1, output);
+	fwrite(&reserved, 4, 1, output);
+	fwrite(&reserved, 4, 1, output);
+	fwrite(&reserved, 4, 1, output);
+	fwrite(&slowa_kodowe_cnt, 4, 1, output);
+	fwrite(&solution_offset, 4, 1, output);
 	fwrite(&sep, 1, 1, output);
 	fwrite(&wall, 1, 1, output);
 	fwrite(&path, 1, 1, output);
 
-
-	
+	fseek(in, 0, SEEK_SET);
 	/* wypisane kolejnych slow kodowych */
 	i = 0;
 	reps = 0;
@@ -161,14 +172,19 @@ int compress_lab_to_binary(char* input_filename, char* output_filename, point_t 
 			fwrite(&sep, 1, 1, output);
 			fwrite(&prev_c, 1, 1, output);
 			fwrite(&reps, 1, 1, output);
-
+			
 			reps = 0;
 		}
-		else if(prev_c == '.' || prev_c == c)
+		else if(prev_c == c)
 			reps++;
 		i++;
+		prev_c = c;
 	}
 
+	fwrite(&sep, 1, 1, output);
+	fwrite(&prev_c, 1, 1, output);
+	fwrite(&reps, 1, 1, output);
+	
 	fclose(in);
 	fclose(output);
 
@@ -202,7 +218,7 @@ int path_to_txt(char* output_filename, int start_node, int end_node, point_t tru
 	
 	FILE* output;
 	if(strstr(output_filename, "stdout") == NULL)
-		output = fopen(output_filename, "ab");
+		output = fopen(output_filename, "w");
 	else
 		output = stdout;
 	if(output == NULL)
