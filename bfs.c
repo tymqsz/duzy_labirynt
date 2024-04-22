@@ -43,6 +43,7 @@ int traverse(int start_node, int end_node, point_t true_size){
 		if(node == end_node){ /*sciezka znaleziona*/
 			free(graph);
 			free(parent);
+			destroy_queue(queue);
 			return 0;
 		}
 
@@ -70,6 +71,7 @@ int traverse(int start_node, int end_node, point_t true_size){
 
 	free(graph);
 	free(parent);
+	destroy_queue(queue);
 
 	return 1; /*brak sciezki*/
 }

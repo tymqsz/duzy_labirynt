@@ -79,8 +79,6 @@ int main(int argc, char** argv){
 		
 		binary_to_txt(input, "lab.txt", lab_size);
 		strcpy(input, "lab.txt");
-
-		printf("start: [%d, %d], end: [%d, %d]\n", start.x, start.y, end.x, end.y);
 	}
 	else{
 		input_status = lab_info_txt(input, &lab_size, &start, &end, &start_left);
@@ -116,7 +114,7 @@ int main(int argc, char** argv){
 	if(no_path){
 		printf("brak sciezki w labiryncie\n");
 		if(strstr(input_filename, ".bin") != NULL)
-			//remove("lab.txt");
+			remove("lab.txt");
 		delete_temp_files(TEMP_BIN_FILES, 4);
 		if(verbose)
 			printf("pliki tymczasowe usuniete\n");
@@ -143,10 +141,11 @@ int main(int argc, char** argv){
 
 	/* usuniecie plikow tymczasowych */
 	if(strstr(input_filename, ".bin") != NULL)
-		//remove("lab.txt");
+		remove("lab.txt");
 	delete_temp_files(TEMP_BIN_FILES, 4);
 	if(verbose)
 		printf("pliki tymczasowe usuniete\n");
-	
+	closedir(input_dir);
+	closedir(output_dir);
 	return 0;
 }

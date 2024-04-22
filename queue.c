@@ -109,9 +109,13 @@ int pop(Queue_t* queue){
 }
 
 
-void destroy_queue(Queue_t* queue){
-	while(queue->internal_size > 0)
-		pop(queue);
-	
-	free(queue);
+void destroy_queue(Queue_t* queue) {
+    while (queue->internal_size > 0) {
+        node_t* next = queue->top->next;
+        free(queue->top);
+        queue->top = next;
+        queue->internal_size--;
+    }
+
+    free(queue);
 }

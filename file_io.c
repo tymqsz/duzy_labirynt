@@ -84,7 +84,6 @@ int lab_info_binary(char* filename, point_t* size, point_t* start, point_t* end,
 	size->x = cols;
 	size->y = rows;
 	
-	//TODO: nie dziala dla slabego ichniejszego formatu UWU
 	start->x = entry_x-1;
 	start->y = entry_y-1;
 
@@ -301,7 +300,7 @@ void path_to_binary(char* output_filename, int start_node, int end_node, point_t
 		output = stdout;
 	
 	/* zliczenie liczby krokow */
-	unsigned short int step_cnt = 0;
+	unsigned int step_cnt = 0;
 	int node = node_cnt;
 	int crt = read_file_position(PATH_BIN, node_cnt);
 	prev_x = crt % true_size.x;
@@ -331,8 +330,8 @@ void path_to_binary(char* output_filename, int start_node, int end_node, point_t
 	
 	/* naglowek rozwiazania */
 	unsigned int id_rozw = 0x52524243;
-	fwrite(&id_rozw, 4, 4, output);
-	fwrite(&step_cnt, 2, 2, output); /* 2 bajty zamiast 1 */
+	fwrite(&id_rozw, 4, 1, output);
+	fwrite(&step_cnt, 4, 1, output); /* 2 bajty zamiast 1 */
 	
 	
 	char char_dir;
