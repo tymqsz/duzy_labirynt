@@ -81,6 +81,13 @@ int lab_info_binary(char* filename, point_t* size, point_t* start, point_t* end,
     fread(&exit_x, sizeof(short int), 1, f);
     fread(&exit_y, sizeof(short int), 1, f);
 
+    cols -= 1;
+    rows -= 1;
+    entry_x -= 1;
+    entry_y -= 1;
+    exit_x -= 1;
+    exit_y -= 1;
+
 
 	size->x = cols;
 	size->y = rows;
@@ -141,12 +148,21 @@ int compress_lab_to_binary(char* input_filename, char* output_filename, point_t 
 	
 	fwrite(&file_id, 4, 1, output);
 	fwrite(&esc, 1, 1, output);
-	fwrite((short int *)&lab_size.x, sizeof(short int), 1, output);
+	
+	/*fwrite((short int *)&lab_size.x, sizeof(short int), 1, output);
 	fwrite((short int*)&lab_size.y, sizeof(short int), 1, output);
 	fwrite((short int*)&start.x, sizeof(short int), 1, output);
 	fwrite((short int*)&start.y, sizeof(short int), 1, output);
 	fwrite((short int*)&end.x, sizeof(short int), 1, output);
-	fwrite((short int*)&end.y, sizeof(short int), 1, output);
+	fwrite((short int*)&end.y, sizeof(short int), 1, output);*/
+
+	fwrite(&(lab_size.x + 1), sizeof(short int), 1, output);
+	fwrite(&(lab_size.y + 1), sizeof(short int), 1, output);
+	fwrite(&(start.x + 1), sizeof(short int), 1, output);
+	fwrite(&(start.y + 1), sizeof(short int), 1, output);
+	fwrite(&(end.x + 1), sizeof(short int), 1, output);
+	fwrite(&(end.y + 1), sizeof(short int), 1, output);
+
 	fwrite(&reserved, 4, 1, output);
 	fwrite(&reserved, 4, 1, output);
 	fwrite(&reserved, 4, 1, output);
